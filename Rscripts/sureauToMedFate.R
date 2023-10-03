@@ -660,8 +660,8 @@ x2 <- forest2spwbInput(forest, soil, SpParamsMED, control)
 
 network <- initCochardNetworks(x2)[[1]]
 
-veg <- readRDS("veg.rds")
-soil <- readRDS("soil.rds")
+veg <- readRDS("Rdata/veg.rds")
+soil <- readRDS("Rdata/soil.rds")
 
 network_2 <- transform_sureauToNetwork(network, veg, soil)
 
@@ -674,7 +674,7 @@ dt = 600
 semi_implicit_integration(network_2, dt = dt, opt = opt, cavitationRefill = "none")
 
 
-sol <- readRDS("outoutVegObject.rds")
+sol <- readRDS("Rdata/outoutVegObject.rds")
 sol2 <- implicit.temporal.integration.atnp1(veg, soil, dt = dt, opt = opt_list)
 
 network_2$Psi_LSym
