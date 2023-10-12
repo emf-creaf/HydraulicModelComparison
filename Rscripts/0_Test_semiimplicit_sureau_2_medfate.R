@@ -1,5 +1,7 @@
 ## THIS SCRIPT TESTS WHETHER SUREAU implementation in R (by N. Martin) and in 
 ## MEDFATE (Rcpp) produce the same results with respect to plant hydraulics
+# Update medfate first from devel branch!!!
+# remotes::install_github("emf-creaf/medfate", ref = "devel")
 
 library(medfate)
 # Implicit time integration function on small time step dt

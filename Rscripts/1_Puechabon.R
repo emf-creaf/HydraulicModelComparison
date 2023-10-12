@@ -1,3 +1,5 @@
+# Update medfate first from devel branch!!!
+# remotes::install_github("emf-creaf/medfate", ref = "devel")
 library(medfate)
 library(readr)
 library(tidyverse)
@@ -39,7 +41,7 @@ sum(soil_waterFC(pue_soil, "VG"))
 sum(soil_waterExtractable(pue_soil, "VG", -6))
 
 
-# METEO -------------------------------------------------------------------
+# Meteo -------------------------------------------------------------------
 pue_meteo <- read_delim("Data/Puechabon/Climat_Puechabon_site.csv", 
                         delim = ";", escape_double = FALSE, trim_ws = TRUE) |>
   rename(dates = DATE,
@@ -69,10 +71,10 @@ pue_forest$treeData$Z95 = 1000
 pue_forest$treeData$LAI = 2.2
 
 
-# Initialisation (Sperry) ----------------------------------------------------------
+# Sperry initialization and run ----------------------------------------------------------
 #Initialize control parameters
 control <- defaultControl("Sperry")
-control$subdailyResults <- TRUE
+control$subdailyResults <- FALSE
 control$cavitationRefill <- "annual"
 control$bareSoilEvaporation <- TRUE
 control$sapFluidityVariation <- FALSE
@@ -119,12 +121,12 @@ x1$belowLayers$VCroot_kmax <- x1$belowLayers$VCroot_kmax*(rs_root/rs_root_new)
 x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
 
 S1 <- spwb(x1, pue_meteo, latitude = pue_latitude, elevation = pue_elevation)
+# shinyplot(S1)
 
-
-# Initialisation (Cochard) ----------------------------------------------------------
+# Cochard initialization and run ----------------------------------------------------------
 #Initialize control parameters
 control <- defaultControl("Cochard")
-control$subdailyResults <- TRUE
+control$subdailyResults <- FALSE
 control$cavitationRefill <- "annual"
 control$bareSoilEvaporation <- TRUE
 control$leafCuticularTranspiration <- TRUE
@@ -161,6 +163,8 @@ control$JarvisPAR <- 0.003
 
 #Initialize input
 x2 <- forest2spwbInput(pue_forest, pue_soil, SpParamsMED, control)
+# Regulates the proportion of sunlit and shade leaves
+x2$paramsInterception$kDIR <- 0.4
 # K	0.5
 x2$paramsInterception$kPAR <- 0.5
 # canopyStorageParam	1.5
@@ -231,20 +235,6 @@ x2$paramsWaterStorage$StemAF <- 0.4
 # vol_Stem	15
 # x2$paramsWaterStorage$Vsapwood <- 15
 
-# LDMC	500
-# LMA	190
-# k_PlantInit	0.8
 
-
-# Tbase	3
-# Fcrit	450
-# PTcoeff	1.14
-
-# rootRadius	0.0002
-# betaRootProfile	0.99
-# turgorPressureAtGsMax	2
-# PsiStartClosing	-1
-# PsiClose	-3.3
-# Regulates the proportion of sunlit and shade leaves
-x2$paramsInterception$kDIR = 0.4
 S2 <- spwb(x2, pue_meteo, latitude = pue_latitude, elevation = pue_elevation)
+# shinyplot(S2)
