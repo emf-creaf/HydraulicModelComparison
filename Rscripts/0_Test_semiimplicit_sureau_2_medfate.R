@@ -1,3 +1,6 @@
+## THIS SCRIPT TESTS WHETHER SUREAU implementation in R (by N. Martin) and in 
+## MEDFATE (Rcpp) produce the same results with respect to plant hydraulics
+
 library(medfate)
 # Implicit time integration function on small time step dt
 
@@ -677,13 +680,18 @@ semi_implicit_integration(network_2, dt = dt, opt = opt, cavitationRefill = "non
 sol <- readRDS("Rdata/outoutVegObject.rds")
 sol2 <- implicit.temporal.integration.atnp1(veg, soil, dt = dt, opt = opt_list)
 
-network_2$Psi_LSym
-sol$Psi_LSym
-sol2$Psi_LSym
+# Psi_LSym
+print(c(network_2$Psi_LSym, sol$Psi_LSym, sol2$Psi_LSym))
+testthat::expect_equal(network_2$Psi_LSym, sol$Psi_LSym)
+testthat::expect_equal(network_2$Psi_LSym, sol2$Psi_LSym)
 
+# Psi_SSym
 network_2$Psi_SSym
 sol$Psi_SSym
 sol2$Psi_SSym
+testthat::expect_equal(network_2$Psi_SSym, sol$Psi_SSym)
+testthat::expect_equal(network_2$Psi_SSym, sol2$Psi_SSym)
+
 
 network_2$Psi_LApo
 sol$Psi_LApo

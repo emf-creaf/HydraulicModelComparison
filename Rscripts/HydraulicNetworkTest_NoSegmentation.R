@@ -8,8 +8,8 @@ library(ggplot2)
 data("exampleforestMED2")
 forest <- exampleforestMED2
 # forest$treeData <- forest$treeData[1, ,drop = FALSE] ## P. halepensis
-forest$treeData <- forest$treeData[2, ,drop = FALSE] ## Q. ilex
-forest$treeData$LAI <- 2
+# forest$treeData <- forest$treeData[2, ,drop = FALSE] ## Q. ilex
+# forest$treeData$LAI <- 2
 forest$shrubData <- forest$shrubData[numeric(0), ,drop = FALSE]
 forest$herbHeight <- NA
 forest$herbLAI <- NA
@@ -88,7 +88,7 @@ control$stemCuticularTranspiration <- TRUE
 
 #Initialize input
 x2 <- forest2spwbInput(forest, soil, SpParamsMED, control)
-x2$paramsTranspiration$Gs_P50 <- -2.5
+x2$paramsTranspiration$Gs_P50 <- c(-2.5, -3.5)
 x2$paramsTranspiration$Gs_slope <- 80
 x2$paramsTranspiration$VCstem_kmax <- 2
 x2$paramsTranspiration$VCleaf_kmax <- 1.5
@@ -96,12 +96,19 @@ x2$canopy$Tair <- 29
 x2$Cair <- 386
 x2$VPair <- 1.688
 x2$soil$Temp <- c(32,29,27.71661)
+x2$paramsTranspiration$Gswmin[1] <- 0.001
 # 1/(1/0.7+1/2+1/1.5)
 
 # cn <- initCochardNetworks(x2)
 
 #Call simulation function
 S2 <- spwb(x2, meteo, 
+           latitude = latitude, elevation = elevation, 
+           slope = slope, aspect = aspect)
+
+x3 <- x2
+x3$control$rootDisconnection <- TRUE
+S3 <- spwb(x3, meteo, 
            latitude = latitude, elevation = elevation, 
            slope = slope, aspect = aspect)
 
@@ -147,15 +154,18 @@ hydraulics_vulnerabilityCurvePlot(x2, type = "root", vulnerabilityFunction = "Si
 # Differences between both models
 plot(S1, "SoilPlantConductance")+theme(legend.position = "none")
 plot(S2, "SoilPlantConductance")+theme(legend.position = "none")
+plot(S3, "SoilPlantConductance")+theme(legend.position = "none")
 
 plot(S1, "StemPsi", subdaily = TRUE)+theme(legend.position = "none")+ylim(c(-8,0))
 plot(S2, "StemPsi", subdaily = TRUE)+theme(legend.position = "none")+ylim(c(-8,0))
 
 plot(S1, "StemPLC") +theme(legend.position = "none")
 plot(S2, "StemPLC") +theme(legend.position = "none")
+plot(S3, "StemPLC") +theme(legend.position = "none")
 
 plot(S1, "LeafPLC") +theme(legend.position = "none")
 plot(S2, "LeafPLC") +theme(legend.position = "none")
+plot(S3, "LeafPLC") +theme(legend.position = "none")
 
 plot(S1, "StemRWC", subdaily = TRUE)+theme(legend.position = "none")
 plot(S2, "StemRWC", subdaily = TRUE)+theme(legend.position = "none")
