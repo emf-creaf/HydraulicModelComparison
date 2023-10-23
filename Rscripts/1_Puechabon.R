@@ -79,6 +79,7 @@ control$cavitationRefill <- "annual"
 control$bareSoilEvaporation <- TRUE
 control$sapFluidityVariation <- FALSE
 
+control$leafCavitationEffects <- TRUE
 
 #Initialize input
 x1 <- forest2spwbInput(pue_forest, pue_soil, SpParamsMED, control)
@@ -93,7 +94,8 @@ x1$paramsInterception$g <- 1.5/2.2
 P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
 wb <- hydraulics_psi2Weibull(-6.4, P88)
 # wbl <- hydraulics_psi2Weibull(-4.5, -5.5)
-wbl <- hydraulics_psi2Weibull(-3.5, -4.5)
+# wbl <- hydraulics_psi2Weibull(-3.5, -4.5)
+wbl <- wb
 x1$paramsTranspiration$VCleaf_c <- wbl["c"]
 x1$paramsTranspiration$VCstem_c <- wb["c"]
 x1$paramsTranspiration$VCroot_c <- wb["c"]
@@ -132,6 +134,7 @@ control$bareSoilEvaporation <- TRUE
 control$leafCuticularTranspiration <- TRUE
 control$stemCuticularTranspiration <- TRUE
 control$sapFluidityVariation <- FALSE
+control$rhizosphereOverlap <- "partial"
 
 control$TPhase_gmin	<- 37.5
 control$Q10_1_gmin <- 1.2

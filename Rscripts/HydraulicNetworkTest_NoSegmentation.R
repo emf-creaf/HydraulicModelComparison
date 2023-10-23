@@ -8,7 +8,7 @@ library(ggplot2)
 data("exampleforestMED2")
 forest <- exampleforestMED2
 # forest$treeData <- forest$treeData[1, ,drop = FALSE] ## P. halepensis
-# forest$treeData <- forest$treeData[2, ,drop = FALSE] ## Q. ilex
+forest$treeData <- forest$treeData[2, ,drop = FALSE] ## Q. ilex
 # forest$treeData$LAI <- 2
 forest$shrubData <- forest$shrubData[numeric(0), ,drop = FALSE]
 forest$herbHeight <- NA
@@ -86,9 +86,10 @@ control$plantCapacitance <- TRUE
 control$leafCuticularTranspiration <- TRUE
 control$stemCuticularTranspiration <- TRUE
 
+control$gs_NightFrac = 0 
 #Initialize input
 x2 <- forest2spwbInput(forest, soil, SpParamsMED, control)
-x2$paramsTranspiration$Gs_P50 <- c(-2.5, -3.5)
+x2$paramsTranspiration$Gs_P50 <- -2.5 # c(-2.5, -3.5)
 x2$paramsTranspiration$Gs_slope <- 80
 x2$paramsTranspiration$VCstem_kmax <- 2
 x2$paramsTranspiration$VCleaf_kmax <- 1.5
@@ -106,16 +107,16 @@ S2 <- spwb(x2, meteo,
            latitude = latitude, elevation = elevation, 
            slope = slope, aspect = aspect)
 
-x3 <- x2
-x3$control$rootDisconnection <- TRUE
-S3 <- spwb(x3, meteo, 
-           latitude = latitude, elevation = elevation, 
-           slope = slope, aspect = aspect)
+# x3 <- x2
+# x3$control$rootDisconnection <- TRUE
+# S3 <- spwb(x3, meteo, 
+#            latitude = latitude, elevation = elevation, 
+#            slope = slope, aspect = aspect)
 
 plot(S1$subdaily[[2]], "SoilPlantConductance")+theme(legend.position = "none")+ ylim(c(0,1))
 plot(S2$subdaily[[2]], "SoilPlantConductance")+theme(legend.position = "none")+ ylim(c(0,1))
-plot(S1$subdaily[[2]], "LeafTranspiration")+theme(legend.position = "none")
-plot(S2$subdaily[[2]], "LeafTranspiration")+theme(legend.position = "none")
+plot(S1$subdaily[[1]], "LeafTranspiration")+theme(legend.position = "none")
+plot(S2$subdaily[[1]], "LeafTranspiration")+theme(legend.position = "none")
 plot(S1$subdaily[[2]], "LeafGrossPhotosynthesis")+theme(legend.position = "none")
 plot(S2$subdaily[[2]], "LeafGrossPhotosynthesis")+theme(legend.position = "none")
 
@@ -130,8 +131,6 @@ plot(S2$subdaily[[2]], "LeafTemp")+theme(legend.position = "none")
 plot(S1$subdaily[[2]], "LeafVPD")+theme(legend.position = "none")
 plot(S2$subdaily[[2]], "LeafVPD")+theme(legend.position = "none")
 
-plot(S1$subdaily[[2]], "LeafPsi")+theme(legend.position = "none")
-plot(S2$subdaily[[2]], "LeafPsi")+theme(legend.position = "none")
 
 plot(S1$subdaily[[2]], "LeafPLC")+theme(legend.position = "none")
 plot(S2$subdaily[[2]], "LeafPLC")+theme(legend.position = "none")
@@ -141,6 +140,13 @@ plot(S2$subdaily[[2]], "LeafRWC")+theme(legend.position = "none")
 
 plot(S1$subdaily[[2]], "LeafSympPsi")+theme(legend.position = "none")
 plot(S2$subdaily[[2]], "LeafSympPsi")+theme(legend.position = "none")
+
+plot(S1$subdaily[[1]], "StemPsi")+theme(legend.position = "none")
+plot(S2$subdaily[[1]], "StemPsi")+theme(legend.position = "none")
+plot(S1$subdaily[[1]], "LeafPsi")+theme(legend.position = "none")
+plot(S2$subdaily[[1]], "LeafPsi")+theme(legend.position = "none")
+
+plot(S2$subdaily[[1]], "StemRWC")+theme(legend.position = "none")
 
 # Plots -------------------------------------------------------------------
 hydraulics_vulnerabilityCurvePlot(x1, type = "leaf", relative = TRUE)+theme(legend.position = "none")
