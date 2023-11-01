@@ -46,12 +46,19 @@ fb_meteo <- read_delim("Data/FontBlanche/Climate_FontBlanche_GapFilled.csv",
 control <- defaultControl("Granier")
 control$cavitationRefill <- "annual"
 control$bareSoilEvaporation <- TRUE
-control$rhizosphereOverlap <- "partial"
+control$rhizosphereOverlap <- "total"
 
-x0 <- fontblanche_input(control)
-S0 <- spwb(x0, fb_meteo, 
-           latitude = fb_latitude, elevation = fb_elevation,
-           slope = fb_slope, aspect = fb_aspect)
+x0t <- fontblanche_input(control)
+S0t <- spwb(x0t, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation,
+            slope = fb_slope, aspect = fb_aspect)
+
+control$rhizosphereOverlap <- "partial"
+x0p <- fontblanche_input(control)
+#Call simulation function
+S0p <- spwb(x0p, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
 
 # Sperry initialization and run ----------------------------------------------------------
 #Initialize control parameters
@@ -120,7 +127,7 @@ p3 <- plot(S2t, "HydraulicRedistribution")+ylim(c(0,1))+theme(legend.position = 
 p4 <- plot(S2p, "HydraulicRedistribution")+ylim(c(0,1))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
 p <-plot_grid(p1, p2, p3, p4,
               nrow = 2)
-ggsave2("Plots/FontBlanche_Real/HydraulicRedistriobution_FontBlanche_Real.png", p, width = 10, height = 8)
+ggsave2("Plots/FontBlanche_Real/HydraulicRedistribution_FontBlanche_Real.png", p, width = 10, height = 8)
 
 p1 <- plot(S1t, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (total)")
 p2 <- plot(S1p, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (partial)")

@@ -26,6 +26,29 @@ meteo$WindSpeed <- 2
 meteo$Radiation  <- 30
 meteo$Precipitation <- 0 # To force dessication
 
+# Granier simulation -------------------------------------------------------
+#Initialize control parameters
+control <- defaultControl("Granier")
+control$bareSoilEvaporation <- FALSE
+
+#Initialize input
+control$rhizosphereOverlap <- "total"
+x0t <- fontblanche_input(control)
+
+#Call simulation function
+S0t <- spwb(x0t, meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+
+
+#Initialize input
+control$rhizosphereOverlap <- "partial"
+x0p <- fontblanche_input(control)
+#Call simulation function
+S0p <- spwb(x0p, meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+
 # Sperry simulation -------------------------------------------------------
 #Initialize control parameters
 control <- defaultControl("Sperry")
@@ -33,7 +56,7 @@ control$subdailyResults <- TRUE
 control$cavitationRefill <- "none"
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
-control$leafCavitationEffects <- TRUE
+control$leafCavitationEffects <- FALSE
 
 #Initialize input
 control$rhizosphereOverlap <- "total"
@@ -89,6 +112,21 @@ S2t <- spwb(x2t, meteo,
            latitude = fb_latitude, elevation = fb_elevation, 
            slope = fb_slope, aspect = fb_aspect)
 
+
+control$stomatalSubmodel <- "Baldocchi"
+x2b <- fontblanche_input(control)
+
+#Change canopy and soil variables
+x2b$canopy$Tair <- 29
+x2b$canopy$Cair <- 386
+x2b$canopy$VPair <- 1.688
+x2b$soil$Temp <- c(32,29,27.71661)
+
+#Call simulation function
+S2b <- spwb(x2b, meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+
 control$rhizosphereOverlap <- "partial"
 x2p <- fontblanche_input(control)
 #Change canopy and soil variables
@@ -103,6 +141,21 @@ S2p <- spwb(x2p, meteo,
             slope = fb_slope, aspect = fb_aspect)
 
 
+control$rhizosphereOverlap <- "total"
+control$soilDisconnection <- TRUE
+x2s <- fontblanche_input(control)
+#Change canopy and soil variables
+x2s$canopy$Tair <- 29
+x2s$canopy$Cair <- 386
+x2s$canopy$VPair <- 1.688
+x2s$soil$Temp <- c(32,29,27.71661)
+
+#Call simulation function
+S2s <- spwb(x2s, meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+
+
 # Plots -------------------------------------------------------------------
 p1 <- plot(S1t, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (total)")
 p2 <- plot(S1p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (partial)")
@@ -111,6 +164,14 @@ p4 <- plot(S2p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+lab
 p <-plot_grid(p1, p2, p3, p4,
               nrow = 2)
 ggsave2("Plots/FontBlanche_Dessication/SoilPsi_FontBlanche_Dessication.png", p, width = 10, height = 8)
+
+p1 <- plot(S1t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (total)")
+p2 <- plot(S1p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (partial)")
+p3 <- plot(S2t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
+p4 <- plot(S2p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
+p <-plot_grid(p1, p2, p3, p4,
+              nrow = 2)
+ggsave2("Plots/FontBlanche_Dessication/HydraulicRedistribution_FontBlanche_Dessication.png", p, width = 10, height = 8)
 
 p1 <- plot(S1t, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (total)")
 p2 <- plot(S1p, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (partial)")

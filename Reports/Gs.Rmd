@@ -1,0 +1,63 @@
+---
+title: "On stomatal regulation"
+author: "M. De Cáceres, N. Martin-StPaul"
+date: "2023-10-31"
+output:
+  html_document: default
+  word_document: default
+---
+
+### On estimating the slope between photosynthesis and stomatal conductance
+
+We start with Ball's equation relating photosynthesis and stomatal conductance (at full turgor):
+
+$$
+G_{s, ft}(A_n/C_s) = m \cdot (A_n/C_s) + b_0
+$$
+
+The same relationship should hold between maximum values:
+$$
+G_{s,ft, max} = m \cdot (A_{n,max}/C_s) + b_0
+$$
+If $G_{s,ft, max}$, $b_0$ and $A_{n, max}$ are known, and assuming we can estimate $m$ using:
+
+$$
+m = (G_{s,ft, max} - b_0)\cdot C_s/A_{n,max}
+$$
+
+$G_{s,ft, max}$ is an available trait for many species (or at least easier to obtain than calibrating the equation from empirical data sets), and $A_{n,max}$ can be estimated assuming $G_{s} = G_{s, max}$, at $T_{leaf} = 25\,ºC$, $C_{s} = 386\,ppm$ and saturated light conditions using Farqhuar's model. In this way we will have that given $V_{cmax}$, $J_{max}$ and $G_{s,max}$, the relationship between $G_{s, ft}$ and $A_{n}/C_s$ is determined. Nico: VPD or RH is also important in gaz exchange measurement
+Take care as in general A, Gs, T, RH, are recorded together
+
+### Stomatal conductance and nocturnal transpiration
+
+The equation for $G_{s, ft}$ can produce values below $b_{0}$ (and even negative $G_{s}$ values) when $A_{n} < 0$. In the Ball model, $b_{0}$ is the stomatal conductance at the light compensation point. If we assume that $b_0 = G_{s,ft,night}$, the nocturnal conductance at full turgor, then it seems reasonable to redefine $G_{s,ft}$ to constrain it as follows:
+
+$$
+G_{s, ft}(A_n/C_s) = \max(G_{s,ft,night}, m \cdot (A_n/C_s) + G_{s,ft,night})
+$$
+
+Assuming that $G_{s,ft, night}$ is a constant fraction of $G_{s,ft, max}$ (i.e. $5\%$) then $m$ can be estimated as indicated using:
+
+$$
+m = G_{s,ft, max} \cdot (1 - 0.05)\cdot C_s/A_{n,max}
+$$
+
+Note that Resco de Dios et al. (2019) found that $G_{s, night}$ was correlated with growth rate, as are $G_{s, max}$ and $V_{cmax}$, which would support the use of a constant fraction.
+
+### Stomatal conductance under varying water potentials
+
+Once $m$ is estimated, we can calculate $G_{s,ft}$ using Baldocchi's approach. However, we know $G_s$ should range between $G_{s,ft}$ and $G_{s, res}$, the residual stomatal conductance due to incomplete closure, for varying water potentials (here VPD or RH effects would be assumed to operate through changing the water potential via hydraulic mechanisms). The variation of water potential is related to turgor loss, the accumulation of absicic acid... but it is hard to model the exact relationship between these proximal processes and $G_s$. Furthermore, it seems not very intuitive to me to change the $G_s$ vs. $A$ relationship due to turgor loss, because it should instead limit its maximum value due mechanical constraints in the guard cells. It is perhaps more practical to continue using an empirical Sigmoid function $f(\Psi)$ with parameters $\Psi_{50,gs}$ and $slope_{gs}$, so that:
+
+$$
+G_{s} = G_{s, ft} \cdot f(\Psi) + G_{s, res} \cdot (1 - f(\Psi))
+$$
+assuming $G_{s, res}$ is the residual stomatal conductance due to incomplete closure. Of course, $A_n$ needs to be recalculated after limiting $G_s$. If transpiration due to $G_{s,res}$ is dealt along with cuticular transpiration, a simpler approach to $G_s$ is:
+$$
+G_{s} = G_{s, ft} \cdot f(\Psi)
+$$
+
+
+
+References
+
+Resco de Dios et al. (2019): https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.15881

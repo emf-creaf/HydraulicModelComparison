@@ -79,6 +79,8 @@ puechabon_input <- function(control) {
   
   if(control$transpirationMode == "Granier") {
     x0 <- forest2spwbInput(pue_forest, pue_soil, SpParamsMED, control)
+    x0$paramsTranspiration$VCstem_c <- wb["c"]
+    x0$paramsTranspiration$VCstem_d <- wb["d"]
     return(x0)
   }
   else if(control$transpirationMode == "Sperry") {
@@ -245,6 +247,30 @@ fontblanche_input <- function(control) {
   
   if(control$transpirationMode == "Granier") {
     x0 <- forest2spwbInput(fb_forest, fb_soil, SpParamsMED, control)
+    
+    # P.latifolia	Qilex	Phalepensis
+    # P50_VC_Leaf	 -6.5	-6.4	 -4.79
+    # slope_VC_Leaf	11	30	46
+    # P50_VC_Stem	 -6.5	-6.4	 -4.79
+    # slope_VC_Stem	11	30	46
+    P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
+    wb <- hydraulics_psi2Weibull(-6.5, P88)
+    x0$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
+    x0$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
+    x0$paramsTranspiration$VCstem_c[pl] <- wb["c"]
+    x0$paramsTranspiration$VCstem_d[pl] <- wb["d"]
+    P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
+    wb <- hydraulics_psi2Weibull(-6.4, P88)
+    x0$paramsTranspiration$VCleaf_c[qi] <- wb["c"]
+    x0$paramsTranspiration$VCleaf_d[qi] <- wb["d"]
+    x0$paramsTranspiration$VCstem_c[qi] <- wb["c"]
+    x0$paramsTranspiration$VCstem_d[qi] <- wb["d"]
+    P88 <- -4.79 + log((100.0/88.0)-1.0)*(25.0/46)
+    wb <- hydraulics_psi2Weibull(-4.79, P88)
+    x0$paramsTranspiration$VCleaf_c[ph] <- wb["c"]
+    x0$paramsTranspiration$VCleaf_d[ph] <- wb["d"]
+    x0$paramsTranspiration$VCstem_c[ph] <- wb["c"]
+    x0$paramsTranspiration$VCstem_d[ph] <- wb["d"]
     return(x0)
   }
   else if(control$transpirationMode == "Sperry") {
