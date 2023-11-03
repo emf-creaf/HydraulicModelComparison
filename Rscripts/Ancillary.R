@@ -43,7 +43,7 @@ puechabon_forest <- function(){
   pue_forest$treeData$DBH <- 9.11
   pue_forest$treeData$Height <- 530.2
   pue_forest$treeData$N <- 1750
-  pue_forest$treeData$Z50 <- 306.5
+  pue_forest$treeData$Z50 <- 200
   pue_forest$treeData$Z95 <- 1000
   pue_forest$treeData$LAI <- 2.2
   return(pue_forest)
@@ -52,10 +52,12 @@ puechabon_forest <- function(){
 fontblanche_forest <- function(){
   fb_forest <- emptyforest()
   fb_forest$treeData <- read.table("Data/FontBlanche/FONBLA_treeData.txt", sep="\t", header = TRUE)
-  fb_forest$treeData$Z50 <- 306.5
+  fb_forest$treeData$Z50 <- 200
   fb_forest$treeData$Z95 <- 1000
-  fb_forest$LAI <- species_LAI(fb_forest, SpParamsMED)
-  fb_forest$LAI <- fb_forest$LAI*(2.7/sum(fb_forest$LAI))
+  fb_forest$treeData$LAI <- species_LAI(fb_forest, SpParamsMED)
+  # remove Phillyrea
+  # fb_forest$treeData <- fb_forest$treeData[-1, ]
+  fb_forest$treeData$LAI <- fb_forest$treeData$LAI*(2.7/sum(fb_forest$treeData$LAI))
   return(fb_forest)
 }
 
@@ -133,8 +135,6 @@ puechabon_input <- function(control) {
     # gCrown0	150
     control$gCrown0 <- 0.150
     # gsMax	220
-    # gsNight	20
-    control$gs_NightFrac <- 20/220
     # JarvisPAR	0.003
     control$JarvisPAR  <- 0.003
     
@@ -369,8 +369,6 @@ fontblanche_input <- function(control) {
     # gCrown0	150
     control$gCrown0 <- 0.150
     # gsMax	220
-    # gsNight	20
-    control$gs_NightFrac <- 20/220
     # JarvisPAR	0.003
     control$JarvisPAR  <- 0.003
     # k_SSymInit	0.26

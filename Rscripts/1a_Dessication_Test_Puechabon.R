@@ -15,7 +15,7 @@ pue_aspect <- 0
 
 # Weather preparation -----------------------------------------------------
 data("examplemeteo")
-meteo <- examplemeteo[1:150,]
+meteo <- examplemeteo[1:100,]
 meteo$DOY <- 200
 meteo$JulianDay <- 200
 meteo$MinTemperature <- 20
@@ -35,6 +35,7 @@ control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- TRUE
 control$rhizosphereOverlap <- "total"
+control$sunlitShade <- FALSE
 
 #Initialize input
 x1 <- puechabon_input(control)
@@ -44,12 +45,14 @@ x1$canopy$Tair <- 29
 x1$canopy$Cair <- 386
 x1$canopy$VPair <- 1.688
 x1$soil$Temp <- c(32,29,27.71661)
+x1$paramsInterception
 
 #Call simulation function
 S1 <- spwb(x1, meteo, 
            latitude = pue_latitude, elevation = pue_elevation, 
            slope = pue_slope, aspect = pue_aspect)
 
+saveRDS(S1, "Rdata/Puechabon/Dessication_Puechabon_Sperry.rds")
 
 # Sureau simulation -------------------------------------------------------
 #Initialize control parameters
@@ -60,22 +63,25 @@ control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
 control$sapFluidityVariation <- FALSE
 control$leafCuticularTranspiration <- TRUE
-control$stemCuticularTranspiration <- TRUE
+control$stemCuticularTranspiration <- FALSE
 control$rhizosphereOverlap <- "total"
+control$stomatalSubmodel <- "Jarvis"
+control$sunlitShade <- FALSE
+control$gs_NightFrac <- 0.001
 
-
-x2 <- puechabon_input(control)
+x2j <- puechabon_input(control)
 
 #Change canopy and soil variables
-x2$canopy$Tair <- 29
-x2$canopy$Cair <- 386
-x2$canopy$VPair <- 1.688
-x2$soil$Temp <- c(32,29,27.71661)
+x2j$canopy$Tair <- 29
+x2j$canopy$Cair <- 386
+x2j$canopy$VPair <- 1.688
+x2j$soil$Temp <- c(32,29,27.71661)
 
 #Call simulation function
-S2 <- spwb(x2, meteo, 
+S2j <- spwb(x2j, meteo, 
            latitude = pue_latitude, elevation = pue_elevation, 
            slope = pue_slope, aspect = pue_aspect)
+saveRDS(S2j, "Rdata/Puechabon/Dessication_Puechabon_Sureau_Jarvis.rds")
 
 
 control$stomatalSubmodel <- "Baldocchi"
@@ -91,17 +97,23 @@ x2b$soil$Temp <- c(32,29,27.71661)
 S2b <- spwb(x2b, meteo, 
            latitude = pue_latitude, elevation = pue_elevation, 
            slope = pue_slope, aspect = pue_aspect)
+saveRDS(S2b, "Rdata/Puechabon/Dessication_Puechabon_Sureau_Baldocchi.rds")
 
 
 # Sperry (segmented) ------------------------------------------------------
-x3 <- x1
-wb <- hydraulics_psi2Weibull(psi50 = -4.0, psi88 = -4.5)
-x3$paramsTranspiration$VCleaf_c <- wb["c"]
-x3$paramsTranspiration$VCleaf_d <- wb["d"]
-x3$control$leafCavitationEffects <- FALSE
-S3 <- spwb(x3, meteo, 
+x1s <- x1
+gs_psi50 <- x2j$paramsTranspiration$Gs_P50
+gs_slope <- x2j$paramsTranspiration$Gs_slope
+gs_psi88 <- gs_psi50 + log((1/0.88)-1.0)*(25.0/gs_slope)
+
+wb <- hydraulics_psi2Weibull(psi50 = gs_psi50, psi88 = gs_psi88)
+x1s$paramsTranspiration$VCleaf_c <- wb["c"]
+x1s$paramsTranspiration$VCleaf_d <- wb["d"]
+x1s$control$leafCavitationEffects <- FALSE
+S1s <- spwb(x1s, meteo, 
            latitude = pue_latitude, elevation = pue_elevation, 
            slope = pue_slope, aspect = pue_aspect)
+saveRDS(S1s, "Rdata/Puechabon/Dessication_Puechabon_Sperry_segmented.rds")
 
 
 # Plots -------------------------------------------------------------------
@@ -172,61 +184,61 @@ S3 <- spwb(x3, meteo,
 
 
 # Plots -------------------------------------------------------------------
-p1 <- plot(S1, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry")+theme(legend.position = c(0.8,0.8))
-p2 <- plot(S2, "SoilPsi")+ylim(c(-5,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
-p3 <- plot(S3, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-seg")+theme(legend.position = c(0.8,0.8))
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/SoilPsi_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
-p2 <- plot(S2, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
-p3 <- plot(S3, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/HydraulicRedistribution_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-
-p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/LeafPsiRange_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/Transpiration_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-
-p1 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/StomatalConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/StemPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-p1 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/LeafPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
-
-p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry")
-p2 <- plot(S2, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
-p3 <- plot(S3, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-seg")
-p <-plot_grid(p1, p3, p2,
-              nrow = 3)
-ggsave2("Plots/Puechabon_Dessication/SoilPlantConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
+# p1 <- plot(S1, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry")+theme(legend.position = c(0.8,0.8))
+# p2 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
+# p3 <- plot(S2j, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-seg")+theme(legend.position = c(0.8,0.8))
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/SoilPsi_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
+# p2 <- plot(S2, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
+# p3 <- plot(S3, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/HydraulicRedistribution_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# 
+# p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/LeafPsiRange_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/Transpiration_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# 
+# p1 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/StomatalConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/StemPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# p1 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/LeafPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
+# 
+# p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry")
+# p2 <- plot(S2, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
+# p3 <- plot(S3, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-seg")
+# p <-plot_grid(p1, p3, p2,
+#               nrow = 3)
+# ggsave2("Plots/Puechabon_Dessication/SoilPlantConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
 
