@@ -1,5 +1,6 @@
 library(readr)
 library(medfate)
+library(meteoland)
 data(SpParamsMED)
 
 # K option 1
@@ -64,13 +65,16 @@ create_forest <- function(sp_name, height_cm){
 
 # Species parameters ------------------------------------------------------
 
-NewParams <- read_delim("Data/NewParamsOK_First.csv", 
-                        delim = ";", escape_double = FALSE, trim_ws = TRUE) |> as.data.frame()
+NewParams <- read_delim("Data/NewParams_Miquel_183Species.csv",
+                        escape_double = FALSE, trim_ws = TRUE) |> as.data.frame()
 
 
 # K_leaf from Wolfe et al.
-NewParams$fRleaf <- pmax(0.2, 0.70 - 0.011*NewParams$HeightMax)
-NewParams$kleaf <- 1/(NewParams$fRleaf/NewParams$kplantConsensus)
+NewParams$kplant <- NewParams$kplant_Gs_TLP
+NewParams$fRleaf <- pmax(0.2, 0.70 - 0.011*NewParams$Height_Diaz_m)
+NewParams$kleaf <- 1/(NewParams$fRleaf/NewParams$kplant_Gs_TLP) # Kplant_Gs_meanDB_TLP, Kplant_Gs_constant
+
+# Force k-plant (20% resistance in stem)
 
 # Gs_P50 and Gs_slope
 NewParams$Gs_slope <- (88-12)/(abs(NewParams$Pgs88) - abs(NewParams$Pgs12))
@@ -84,50 +88,66 @@ NewParams$P12_VC <- NewParams$P50_VC + log((1/0.12)-1.0)*(25.0/NewParams$Slope_V
 NewParams$P88_VC <- NewParams$P50_VC + log((1/0.88)-1.0)*(25.0/NewParams$Slope_VC)
 
 # Nleaf
-NewParams$Nleaf <- 13
+NewParams$Nleaf <- NewParams$Nmass..mg.g.
+
+buildSpParams <- FALSE
+if(buildSpParams) {
+  SpParams <- medfateutils::initSpParams(NewParams$species, SpParamsDefinition)
+  # SpParams$GrowthForm <- ifelse(NewParams$GrowthForm=="T", "Tree", "Shrub")
+  SpParams$GrowthForm <- "Tree"
+  SpParams$LifeForm <- "Phanerophyte"
+  SpParams$LeafShape <- "Broad"
+  SpParams$LeafSize <- "Large"
+  SpParams$PhenologyType <- "continuous-evergreen"
+  SpParams$Gswmax <- NewParams$Gs_TLP
+  SpParams$Gswmin <- NewParams$gmin_mmol/1000
+  SpParams$Kmax_stemxylem <- NewParams$`Ks (kg m-1 MPa-1 s-1)`
+  SpParams$Hmax <- NewParams$Hmax*100
+  SpParams$Hmax[is.na(SpParams$Hmax)] <- 3000
+  SpParams$Hmed <- SpParams$Hmax*0.7
+  SpParams$SLA <- 1000/NewParams$LMA_gm2
+  SpParams$Al2As <- 1/NewParams$HV_Med_XFT
+  SpParams$plant_kmax <- NewParams$kplant
+  SpParams$VCstem_P12 <- NewParams$P12_VC
+  SpParams$VCstem_P88 <- NewParams$P88_VC
+  SpParams$VCstem_P50 <- NewParams$P50_VC
+  SpParams$VCstem_slope <- NewParams$Slope_VC
+  SpParams$VCleaf_P12 <- NewParams$P12_VC
+  SpParams$VCleaf_P88 <- NewParams$P88_VC
+  SpParams$VCleaf_P50 <- NewParams$P50_VC
+  SpParams$VCleaf_slope <- NewParams$Slope_VC
+  SpParams$VCleaf_kmax <- NewParams$kleaf
+  SpParams$VCroot_P12 <- NewParams$P12_VC
+  SpParams$VCroot_P88 <- NewParams$P88_VC
+  SpParams$VCroot_P50 <- NewParams$P50_VC
+  SpParams$VCroot_slope <- NewParams$Slope_VC
+  SpParams$LeafPI0 <- NewParams$Pi0
+  SpParams$LeafEPS <- NewParams$Esymp
+  SpParams$LeafAF <- NA
+  SpParams$StemPI0 <- NA
+  SpParams$StemEPS <- NA
+  SpParams$StemAF <- NA
+  SpParams$Gs_P50 <- NewParams$Gs_P50
+  SpParams$Gs_slope <- NewParams$Gs_slope
+  SpParams$Nleaf <- NewParams$Nleaf
+  SpParams$Vmax298 <- NA
+  SpParams$Jmax298 <- NA
+  write.table(SpParams, "Tables/SpParams.txt", sep="\t", quote=FALSE)
+} else {
+  SpParams <- read.table(file="Tables/SpParams.txt", sep="\t", header = TRUE)
+}
 
 
-
-SpParams <- medfateutils::initSpParams(NewParams$Species, SpParamsDefinition)
-SpParams$GrowthForm <- ifelse(NewParams$GrowthForm=="T", "Tree", "Shrub")
-SpParams$LifeForm <- "Phanerophyte"
-SpParams$LeafShape <- "Broad"
-SpParams$LeafSize <- "Large"
-SpParams$PhenologyType <- "continuous-evergreen"
-SpParams$Gswmax <- NewParams$gs_consensus
-SpParams$Gswmin <- NewParams$gmin_mmol/1000
-SpParams$Kmax_stemxylem <- 1 # NewParams$Kstem[sp_index]
-SpParams$Hmax <- NewParams$HeightMax*100
-SpParams$Hmed <- SpParams$Hmax*0.7
-SpParams$SLA <- 1000/NewParams$LMA_gm2
-SpParams$Al2As <- 1000/NewParams$HV
-SpParams$VCstem_P12 <- NewParams$P12_VC
-SpParams$VCstem_P88 <- NewParams$P88_VC
-SpParams$VCstem_P50 <- NewParams$P50_VC
-SpParams$VCstem_slope <- NewParams$Slope_VC
-SpParams$VCleaf_P12 <- NewParams$P12_VC
-SpParams$VCleaf_P88 <- NewParams$P88_VC
-SpParams$VCleaf_P50 <- NewParams$P50_VC
-SpParams$VCleaf_slope <- NewParams$Slope_VC
-SpParams$VCleaf_kmax <- NewParams$kleaf
-SpParams$VCroot_P12 <- NewParams$P12_VC
-SpParams$VCroot_P88 <- NewParams$P88_VC
-SpParams$VCroot_P50 <- NewParams$P50_VC
-SpParams$VCroot_slope <- NewParams$Slope_VC
-SpParams$LeafPI0 <- NewParams$Pi0
-SpParams$LeafEPS <- NewParams$Esymp
-SpParams$LeafAF <- NA
-SpParams$StemPI0 <- NA
-SpParams$StemEPS <- NA
-SpParams$StemAF <- NA
-SpParams$Gs_P50 <- NewParams$Gs_P50
-SpParams$Gs_slope <- NewParams$Gs_slope
-SpParams$Nleaf <- NewParams$Nleaf
-SpParams$Vmax298 <- NA
-SpParams$Jmax298 <- NA
-write.table(SpParams, "Tables/SpParams.txt", sep="\t", quote=FALSE)
-
-
+correctKplant <- function(x, kplant) {
+  rplant  <- 1/kplant
+  x$paramsTranspiration$Plant_kmax <- kplant
+  x$paramsTranspiration$VCleaf_kmax <- 1/(rplant*0.4)
+  x$paramsTranspiration$VCstem_kmax <- 1/(rplant*0.3)
+  x$paramsTranspiration$VCroot_kmax <- 1/(rplant*0.3)
+  x$belowLayers$VCroot_kmax <- x$paramsTranspiration$VCroot_kmax*x$belowLayers$VCroot_kmax/sum(x$belowLayers$VCroot_kmax)
+  medfate:::.updateBelow(x)
+  return(x)  
+}
 
 # Simulations -------------------------------------------------------------
 soil <- common_soil()
@@ -137,24 +157,28 @@ nspp <- nrow(SpParams)
 results <- data.frame(Species = SpParams$Name)
 results$actual_kplant <- NA
 results$psi_min <- NA
+results$gs_max <- NA
 results$E_max <- NA
 results$day_closure <- NA
 results$day_failure_leaf <- NA
 results$day_failure_stem <- NA
 
 simSperry <- TRUE
-simSperry_segmented <- TRUE
+simSperry_segmented <- FALSE
 simSureau <- TRUE
 
 results_sperry <- results
 results_sperry_segmented <-results
 results_sureau <- results
 
-for(sp_index in 1:nspp) {
+toProcess <- 1:nspp
+for(sp_index in toProcess) {
   cat(paste0(sp_index, " Species name: ", results$Species[sp_index]))
 
   cat(paste0(" FOREST "))
-  forest <- create_forest( NewParams$Species[sp_index],  NewParams$HeightMax[sp_index]*100)
+  height <- NewParams$Plant.height..m.[sp_index]*100
+  if(is.na(height)) height <- 2000 # 20 m
+  forest <- create_forest( NewParams$species[sp_index],  height)
   
 
   if(simSperry) {
@@ -168,10 +192,12 @@ for(sp_index in 1:nspp) {
       control$sapFluidityVariation <- FALSE
       control$leafCavitationEffects <- TRUE
       control$rhizosphereOverlap <- "total"
+      control$sunlitShade <- FALSE
       control$verbose <- FALSE
       
       #Initialize input
       x1 <- forest2spwbInput(forest, soil, SpParams, control)
+      x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
       
       #Change canopy and soil variables
       x1$canopy$Tair <- 29
@@ -185,6 +211,7 @@ for(sp_index in 1:nspp) {
       
       results_sperry$actual_kplant[sp_index] <- S1$spwbOutput$paramsTranspiration$Plant_kmax[1]
       results_sperry$psi_min[sp_index] <- S1$Plants$LeafPsiMin[1]
+      results_sperry$gs_max[sp_index] <- S1$SunlitLeaves$GSWMax[1]
       results_sperry$E_max[sp_index] <- max(S1$subdaily[[1]]$SunlitLeavesInst$E)
       
       gswmax <- S1$SunlitLeaves$GSWMax
@@ -198,6 +225,8 @@ for(sp_index in 1:nspp) {
       if(is.na(results_sperry$day_closure[sp_index])) {
         results_sperry$day_closure[sp_index] = results_sperry$day_failure_leaf[sp_index]
       }
+      rm(S1)
+      rm(x1)
     })
   }
   
@@ -221,7 +250,8 @@ for(sp_index in 1:nspp) {
       SpParamsOne_S$VCleaf_P12 <- NA
       SpParamsOne_S$VCleaf_P88 <- NA
       x1 <- forest2spwbInput(forest, soil, SpParamsOne_S, control)
-
+      x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
+      
       #Change canopy and soil variables
       x1$canopy$Tair <- 29
       x1$canopy$Cair <- 386
@@ -234,8 +264,9 @@ for(sp_index in 1:nspp) {
       
       results_sperry_segmented$actual_kplant[sp_index] <- S1$spwbOutput$paramsTranspiration$Plant_kmax[1]
       results_sperry_segmented$psi_min[sp_index] <- S1$Plants$LeafPsiMin[1]
+      results_sperry_segmented$gs_max[sp_index] <- S1$SunlitLeaves$GSWMax[1]
       results_sperry_segmented$E_max[sp_index] <- max(S1$subdaily[[1]]$SunlitLeavesInst$E)
-      
+
       gswmax <- S1$SunlitLeaves$GSWMax
       gswmax <- gswmax[!is.na(gswmax)]
       
@@ -246,6 +277,9 @@ for(sp_index in 1:nspp) {
       if(is.na(results_sperry_segmented$day_closure[sp_index])) {
         results_sperry_segmented$day_closure[sp_index] = results_sperry_segmented$day_failure_leaf[sp_index]
       }
+      rm(S1)
+      rm(x1)
+      
     })
   }
   
@@ -254,7 +288,7 @@ for(sp_index in 1:nspp) {
     # SUREAU SIMULATIONS
     # No cavitation refill
     # Leaf cuticular transpiration (for consistency with Sperry's use of gmin) but not stem cuticular transpiration
-    # Plant capacitance disabled
+    # Plant simplasmic capacitance enabled but cavitation flux disabled
     # No bare soil evaporation
     # Nocturnal transpiration equal to leaf cuticular transpiration (i.e. Gs_night = 0)
     # Leaf hydraulic conductance divided between apoplasmic (10% resistance) and symplasmic (90% resistance)
@@ -266,12 +300,13 @@ for(sp_index in 1:nspp) {
       control$cavitationRefill <- "none"
       control$bareSoilEvaporation <- FALSE
       control$plantCapacitance <- TRUE
+      control$cavitationFlux <- FALSE
       control$sapFluidityVariation <- FALSE
       control$leafCuticularTranspiration <- TRUE
       control$stemCuticularTranspiration <- FALSE
       control$rhizosphereOverlap <- "total"
       control$stomatalSubmodel <- "Baldocchi"
-      control$gs_NightFrac <- 0.01
+      control$gs_NightFrac <- 0.001
       control$verbose <- FALSE
       
       x2 <- forest2spwbInput(forest, soil, SpParams, control)
@@ -289,9 +324,11 @@ for(sp_index in 1:nspp) {
       S2 <- spwb(x2, meteo, 
                  latitude = pue_latitude, elevation = pue_elevation, 
                  slope = pue_slope, aspect = pue_aspect)
+      x2 <- correctKplant(x2, SpParams$plant_kmax[sp_index])
       
       results_sureau$actual_kplant[sp_index] <- S2$spwbOutput$paramsTranspiration$Plant_kmax[1]
       results_sureau$psi_min[sp_index] <- S2$Plants$LeafPsiMin[1]
+      results_sureau$gs_max[sp_index] <- S2$SunlitLeaves$GSWMax[1]
       results_sureau$E_max[sp_index] <- max(S2$subdaily[[1]]$SunlitLeavesInst$E)
       
       gswmax <- S2$SunlitLeaves$GSWMax
@@ -304,6 +341,9 @@ for(sp_index in 1:nspp) {
       if(is.na(results_sureau$day_closure[sp_index])) {
         results_sureau$day_closure[sp_index] = results_sureau$day_failure_leaf[sp_index]
       }
+      rm(S2)
+      rm(x2)
+      
     })
   }
   

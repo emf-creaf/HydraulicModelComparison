@@ -75,6 +75,7 @@ control$subdailyResults <- TRUE
 control$cavitationRefill <- "none"
 control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
+control$cavitationFlux <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCuticularTranspiration <- TRUE
 control$stemCuticularTranspiration <- FALSE
@@ -143,21 +144,21 @@ saveRDS(S2s, "Rdata/FontBlanche/Dessication_FontBlanche_Sureau_Baldocchi_disconn
 
 
 # Plots -------------------------------------------------------------------
-p1 <- plot(S1t, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (total)")
-p2 <- plot(S1p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (partial)")
-p3 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (total)")
-p4 <- plot(S2p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (partial)")
-p <-plot_grid(p1, p2, p3, p4,
-              nrow = 2)
-ggsave2("Plots/FontBlanche_Dessication/SoilPsi_FontBlanche_Dessication.png", p, width = 10, height = 8)
-
-p1 <- plot(S1t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (total)")
-p2 <- plot(S1p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (partial)")
-p3 <- plot(S2t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
-p4 <- plot(S2p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
-p <-plot_grid(p1, p2, p3, p4,
-              nrow = 2)
-ggsave2("Plots/FontBlanche_Dessication/HydraulicRedistribution_FontBlanche_Dessication.png", p, width = 10, height = 8)
+# p1 <- plot(S1t, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (total)")
+# p2 <- plot(S1p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (partial)")
+# p3 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (total)")
+# p4 <- plot(S2p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (partial)")
+# p <-plot_grid(p1, p2, p3, p4,
+#               nrow = 2)
+# ggsave2("Plots/FontBlanche_Dessication/SoilPsi_FontBlanche_Dessication.png", p, width = 10, height = 8)
+# 
+# p1 <- plot(S1t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (total)")
+# p2 <- plot(S1p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (partial)")
+# p3 <- plot(S2t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
+# p4 <- plot(S2p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
+# p <-plot_grid(p1, p2, p3, p4,
+#               nrow = 2)
+# ggsave2("Plots/FontBlanche_Dessication/HydraulicRedistribution_FontBlanche_Dessication.png", p, width = 10, height = 8)
 # 
 # p1 <- plot(S1t, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (total)")
 # p2 <- plot(S1p, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (partial)")

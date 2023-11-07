@@ -1,0 +1,198 @@
+---
+title: "Dessication tests (multiple species)"
+author: "Miquel De Cáceres"
+date: "2023-11-05"
+output: html_document
+---
+```{r, echo = FALSE, message = FALSE, warning=FALSE, include = FALSE}
+library(ggplot2)
+library(cowplot)
+library(medfate)
+
+
+Sys.setlocale("LC_TIME", "en_US.UTF-8")
+```
+
+```{r, echo = FALSE, include = FALSE}
+SpParams <- read.table(file="../Tables/SpParams.txt", sep="\t", header = TRUE)
+results_sureau <- read.table(file="../Tables/results_sureau.txt", sep="\t", header = TRUE)
+results_sperry <- read.table(file="../Tables/results_sperry.txt", sep="\t", header = TRUE)
+results_sperry_segmented <- read.table(file="../Tables/results_sperry_segmented.txt", sep="\t", header = TRUE)
+
+sel1  <- results_sureau$day_failure_leaf>=50
+sel2  <- results_sperry$day_failure_leaf>=50
+results_sureau <- results_sureau[sel1 & sel2, ]
+results_sperry <- results_sperry[sel1 & sel2, ]
+
+results_sureau$model <- "Sureau"
+results_sperry$model <- "Sperry"
+results <- dplyr::bind_rows(results_sperry, results_sureau)
+results <- results |>
+  dplyr::rename(Name = Species) |>
+  dplyr::left_join(SpParams, by= "Name")
+SpParams <- SpParams[sel1 & sel2, ]
+```
+
+
+*Trait correlations*:
+
+A positive relationship exists between Gs_P50 and VC_P50, as well as between VC_P50 and Gswmax. Relationships between Gs_P50 and maximum stomatal conductance (Gswmax) or whole-plant hydraulic conductance (Plant_kmax) have been enforced by construction.
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 7, warning=FALSE}
+g1 <- ggplot(SpParams)+
+  geom_point(aes(x = VCstem_P50, y = Gs_P50))+
+  geom_abline(intercept= 0, slope = 1)+
+  theme_bw()
+g2 <- ggplot(SpParams)+
+  geom_point(aes(x = VCstem_P50, y = Gswmax))+
+  geom_abline(intercept= 0, slope = 1)+
+  theme_bw()
+g3 <- ggplot(SpParams)+
+  geom_point(aes(x = Gs_P50, y = Gswmax))+
+  geom_abline(intercept= 0, slope = 1)+
+  theme_bw()
+g4 <- ggplot(SpParams)+
+  geom_point(aes(x = Gs_P50, y = plant_kmax))+
+  theme_bw()
+plot_grid(g1, g2, g3, g4, nrow = 2)
+```
+
+
+*Model coincidence in closure and failure*:
+
+Sperry has a tendency to close stomata earlier, and a tendency to earlier hydraulic failure than Sureau.
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g2 <- ggplot()+
+  geom_point(aes(x = results_sureau$day_failure_leaf, y = results_sperry$day_failure_leaf, col = SpParams$VCstem_P50 - SpParams$Gs_P50))+
+  geom_smooth(aes(x = results_sureau$day_closure, y = results_sperry$day_closure), method = "lm")+
+  geom_abline(intercept = 0, slope = 1)+
+  scale_color_continuous("P50 diff")+
+  ylim(c(0,365))+xlim(c(0,365))+
+  ylab("Time to hydraulic failure in SPERRY")+
+  xlab("Time to hydraulic failure in SUREAU")+
+  theme_bw()
+g1 <- ggplot()+
+  geom_point(aes(x = results_sureau$day_closure, y = results_sperry$day_closure, col = SpParams$VCstem_P50 - SpParams$Gs_P50))+
+  geom_smooth(aes(x = results_sureau$day_closure, y = results_sperry$day_closure), method = "lm")+
+  scale_color_continuous("P50 diff")+
+  geom_abline(intercept = 0, slope = 1)+
+  ylim(c(0,365))+xlim(c(0,365))+
+  ylab("Time to stomatal closure in SPERRY")+
+  xlab("Time to stomatal closure in SUREAU")+
+  theme_bw()
+l <- get_legend(g1)
+plot_grid(g1+theme(legend.position = "none"), 
+          g2+theme(legend.position = "none"), 
+          l, nrow = 1, rel_widths = c(1,1,0.3))
+```
+
+
+*Relationship between VC_P50 or Gs_P50 and Psi_min*:
+
+The left panel shows how Sperry model decides leaf water potential trying to maintain a safety margin with respect to VC_P50, which is not the case in Sureau. The right panel illustrates that Sureau determines a leaf water potential less negative than Gs_P50, whereas Sperry leads to more negative leaf water potential than Gs_P50. In both panels, the black line indicates the 1:1 relationship.
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = VCstem_P50, y = psi_min, col = model))+
+  geom_abline(intercept = 0, slope = 1)+
+  xlab("Water potential corresponding to 50% stem PLC (MPa)")+ ylab("Initial midday water potential (MPa)")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.85,0.15))
+g2 <- ggplot(results)+
+  geom_point(aes(x = Gs_P50, y = psi_min, col = model))+
+  geom_abline(intercept = 0, slope = 1)+
+  xlab("Water potential corresponding to 50% Gs (MPa)")+ ylab("Initial midday water potential (MPa)")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = "none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+
+*Relationship between Gs_P50 and day to closure and hydraulic failure*:
+
+There is a negative linear relationship in both models between Gs_P50 and the time to stomatal closure. More negative Gs_P50 resulting in later closure. This may be the result of the positive relationship between Gs_P50 and Gswmax or Plant_kmax, with less negative Gs_P50 values coordinated with an increased transpiration and, hence, an earlier closure. The relationship with Gs_P50 is less strong in the case of the time to hydraulic failure.
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = Gs_P50, y = day_closure, col = model))+
+  geom_smooth(aes(x = Gs_P50, y = day_closure, col = model))+
+  xlab("Water potential corresponding to 50% Gs (MPa)")+ ylab("Time to stomatal closure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = Gs_P50, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = Gs_P50, y = day_failure_stem, col = model))+
+  xlab("Water potential corresponding to 50% Gs (MPa)")+ ylab("Time to hydraulic failure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = "none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+
+*Relationship between VC_P50 and day to closure and hydraulic failure*:
+
+There seems to be no obvious correspondence between VC_P50 and the time to stomatal closure. In Sureau there is, however, a relationship with the time to hydraulic failure, the more resistant species indeed resisting longer. Apparently, this relationship does not occur in Sperry.
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = VCstem_P50, y = day_closure, col = model))+
+  geom_smooth(aes(x = VCstem_P50, y = day_closure, col = model))+
+  xlab("Water potential corresponding to 50% stem PLC (MPa)")+ ylab("Time to stomatal closure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = VCstem_P50, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = VCstem_P50, y = day_failure_stem, col = model))+
+  xlab("Water potential corresponding to 50% stem PLC (MPa)")+ ylab("Time to hydraulic failure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = "none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+*Relationship between k_plant and day to closure / hydraulic failure*:
+
+There is a strong relationship in both models between whole-plant hydraulic conductance and the time to stomatal closure, with a higher hydraulic efficiency leading to an earlier closure. The relationship is less obvious in the case of hydraulic failure (other traits become more relevant)
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = actual_kplant, y = day_closure, col = model))+
+  geom_smooth(aes(x = actual_kplant, y = day_closure, col = model))+
+  ylab("Time to stomatal closure")+ xlab("Whole-plant hydraulic conductance")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = actual_kplant, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = actual_kplant, y = day_failure_stem, col = model))+
+  ylab("Time to hydraulic failure")+ xlab("Whole-plant hydraulic conductance")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position ="none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+*Relationship between maximum stomatal conductance and day to closure / hydraulic failure*:
+
+Patterns are similar than with kplant
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = Gswmax, y = day_closure, col = model))+
+  geom_smooth(aes(x = Gswmax, y = day_closure, col = model))+
+  ylab("Time to stomatal closure")+ xlab("Maximum stomatal conductance")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = Gswmax, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = Gswmax, y = day_failure_stem, col = model))+
+  ylab("Time to hydraulic failure")+ xlab("Maximum stomatal conductance")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position ="none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+
+

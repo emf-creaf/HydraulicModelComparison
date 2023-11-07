@@ -8,10 +8,10 @@ library(cowplot)
 source("Rscripts/Ancillary.R")
 
 # Terrain -----------------------------------------------------------------
-pue_latitude <- 43.74139
-pue_elevation <- 270
-pue_slope <- 0
-pue_aspect <- 0
+yat_latitude <- 31.3
+yat_elevation <- 650
+yat_slope <- 0
+yat_aspect <- 0
 
 # Weather preparation -----------------------------------------------------
 data("examplemeteo")
@@ -38,7 +38,7 @@ control$rhizosphereOverlap <- "total"
 control$sunlitShade <- FALSE
 
 #Initialize input
-x1 <- puechabon_input(control)
+x1 <- yatir_input(control)
 
 #Change canopy and soil variables
 x1$canopy$Tair <- 29
@@ -49,10 +49,10 @@ x1$paramsInterception
 
 #Call simulation function
 S1 <- spwb(x1, meteo, 
-           latitude = pue_latitude, elevation = pue_elevation, 
-           slope = pue_slope, aspect = pue_aspect)
+           latitude = yat_latitude, elevation = yat_elevation, 
+           slope = yat_slope, aspect = yat_aspect)
 
-saveRDS(S1, "Rdata/Puechabon/Dessication_Puechabon_Sperry.rds")
+saveRDS(S1, "Rdata/Yatir/Dessication_Yatir_Sperry.rds")
 
 # Sureau simulation -------------------------------------------------------
 #Initialize control parameters
@@ -70,7 +70,7 @@ control$stomatalSubmodel <- "Jarvis"
 control$sunlitShade <- FALSE
 control$gs_NightFrac <- 0.001
 
-x2j <- puechabon_input(control)
+x2j <- yatir_input(control)
 
 #Change canopy and soil variables
 x2j$canopy$Tair <- 29
@@ -80,13 +80,13 @@ x2j$soil$Temp <- c(32,29,27.71661)
 
 #Call simulation function
 S2j <- spwb(x2j, meteo, 
-           latitude = pue_latitude, elevation = pue_elevation, 
-           slope = pue_slope, aspect = pue_aspect)
-saveRDS(S2j, "Rdata/Puechabon/Dessication_Puechabon_Sureau_Jarvis.rds")
+           latitude = yat_latitude, elevation = yat_elevation, 
+           slope = yat_slope, aspect = yat_aspect)
+saveRDS(S2j, "Rdata/Yatir/Dessication_Yatir_Sureau_Jarvis.rds")
 
 
 control$stomatalSubmodel <- "Baldocchi"
-x2b <- puechabon_input(control)
+x2b <- yatir_input(control)
 
 #Change canopy and soil variables
 x2b$canopy$Tair <- 29
@@ -96,9 +96,9 @@ x2b$soil$Temp <- c(32,29,27.71661)
 
 #Call simulation function
 S2b <- spwb(x2b, meteo, 
-           latitude = pue_latitude, elevation = pue_elevation, 
-           slope = pue_slope, aspect = pue_aspect)
-saveRDS(S2b, "Rdata/Puechabon/Dessication_Puechabon_Sureau_Baldocchi.rds")
+           latitude = yat_latitude, elevation = yat_elevation, 
+           slope = yat_slope, aspect = yat_aspect)
+saveRDS(S2b, "Rdata/Yatir/Dessication_Yatir_Sureau_Baldocchi.rds")
 
 
 # Sperry (segmented) ------------------------------------------------------
@@ -112,9 +112,9 @@ x1s$paramsTranspiration$VCleaf_c <- wb["c"]
 x1s$paramsTranspiration$VCleaf_d <- wb["d"]
 x1s$control$leafCavitationEffects <- FALSE
 S1s <- spwb(x1s, meteo, 
-           latitude = pue_latitude, elevation = pue_elevation, 
-           slope = pue_slope, aspect = pue_aspect)
-saveRDS(S1s, "Rdata/Puechabon/Dessication_Puechabon_Sperry_segmented.rds")
+           latitude = yat_latitude, elevation = yat_elevation, 
+           slope = yat_slope, aspect = yat_aspect)
+saveRDS(S1s, "Rdata/Yatir/Dessication_Yatir_Sperry_segmented.rds")
 
 
 # Plots -------------------------------------------------------------------
@@ -190,14 +190,14 @@ saveRDS(S1s, "Rdata/Puechabon/Dessication_Puechabon_Sperry_segmented.rds")
 # p3 <- plot(S2j, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-seg")+theme(legend.position = c(0.8,0.8))
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/SoilPsi_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/SoilPsi_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
 # p2 <- plot(S2, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
 # p3 <- plot(S3, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/HydraulicRedistribution_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/HydraulicRedistribution_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # 
 # p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry")
@@ -205,14 +205,14 @@ saveRDS(S1s, "Rdata/Puechabon/Dessication_Puechabon_Sperry_segmented.rds")
 # p3 <- plot(S3, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-5,0))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/LeafPsiRange_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/LeafPsiRange_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry")
 # p2 <- plot(S2, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
 # p3 <- plot(S3, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/Transpiration_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/Transpiration_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # 
 # p1 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry")
@@ -220,26 +220,26 @@ saveRDS(S1s, "Rdata/Puechabon/Dessication_Puechabon_Sperry_segmented.rds")
 # p3 <- plot(S3, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/StomatalConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/StomatalConductance_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
 # p2 <- plot(S2, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
 # p3 <- plot(S3, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/StemPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/StemPLC_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # p1 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
 # p2 <- plot(S2, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
 # p3 <- plot(S3, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/LeafPLC_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/LeafPLC_Yatir_Dessication.png", p, width = 6, height = 11)
 # 
 # p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry")
 # p2 <- plot(S2, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
 # p3 <- plot(S3, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-seg")
 # p <-plot_grid(p1, p3, p2,
 #               nrow = 3)
-# ggsave2("Plots/Puechabon_Dessication/SoilPlantConductance_Puechabon_Dessication.png", p, width = 6, height = 11)
+# ggsave2("Plots/Yatir_Dessication/SoilPlantConductance_Yatir_Dessication.png", p, width = 6, height = 11)
 
