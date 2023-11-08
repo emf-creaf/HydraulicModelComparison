@@ -77,7 +77,7 @@ yatir_forest <- function(){
   yat_forest$treeData$Z50 <- 200
   yat_forest$treeData$Z95 <- 1000
   yat_forest$treeData$LAI <- 1.5
-  return(pue_forest)
+  return(yat_forest)
 }
 
 fontblanche_forest <- function(){
@@ -550,8 +550,8 @@ yatir_input <- function(control) {
   k_LSym <- 2
   1/(1/k_RSApo + 1/k_SLApo + 1/k_LSym)
   
-  P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
-  wb <- hydraulics_psi2Weibull(-6.4, P88)
+  P88 <- -4.79 + log((100.0/88.0)-1.0)*(25.0/46)
+  wb <- hydraulics_psi2Weibull(-4.79, P88)
   
   if(control$transpirationMode == "Granier") {
     x0 <- forest2spwbInput(yat_forest, yat_soil, SpParamsMED, control)
@@ -587,19 +587,13 @@ yatir_input <- function(control) {
     x1$paramsTranspiration$Gswmax <- 0.2175  # 0.2175
     
     # Conductances
-    x1$paramsTranspiration$VCleaf_kmax <- 1/(1/k_SLApo + 1/k_LSym)
-    # x1$paramsTranspiration$VCleaf_kmax <- k_SLApo
-    rs_stem <- (1/x1$paramsTranspiration$VCstem_kmax)
-    rs_root <- (1/x1$paramsTranspiration$VCroot_kmax)
-    rs_stem_new <- (1/k_RSApo)*(rs_stem/(rs_stem+rs_root))
-    rs_root_new <- (1/k_RSApo)*(rs_root/(rs_stem+rs_root))
-    sum(rs_stem_new+rs_root_new)
-    x1$paramsTranspiration$VCstem_kmax <- 1/rs_stem_new
-    x1$paramsTranspiration$VCroot_kmax <- 1/rs_root_new
-    1/(1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
-    x1$belowLayers$VCroot_kmax <- x1$belowLayers$VCroot_kmax*(rs_root/rs_root_new)
+    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.4)
+    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x1$belowLayers$VCroot_kmax <- x1$belowLayers$VCroot_kmax*x1$paramsTranspiration$VCroot_kmax/sum(x1$belowLayers$VCroot_kmax)
     x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
-    # medfate:::.updateBelow(x1)
+    
+    medfate:::.updateBelow(x1)
     return(x1)
   }
   else if(control$transpirationMode =="Cochard"){

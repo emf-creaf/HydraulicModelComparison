@@ -1,6 +1,7 @@
 # Update medfate first from devel branch!!!
 # remotes::install_github("emf-creaf/medfate", ref = "devel")
 library(medfate)
+library(meteoland)
 library(ggplot2)
 library(tidyverse)
 library(cowplot)

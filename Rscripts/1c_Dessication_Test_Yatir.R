@@ -1,6 +1,7 @@
 # Update medfate first from devel branch!!!
 # remotes::install_github("emf-creaf/medfate", ref = "devel")
 library(medfate)
+library(meteoland)
 library(ggplot2)
 library(tidyverse)
 library(cowplot)
@@ -15,7 +16,7 @@ yat_aspect <- 0
 
 # Weather preparation -----------------------------------------------------
 data("examplemeteo")
-meteo <- examplemeteo[1:100,]
+meteo <- examplemeteo[1:150,]
 meteo$DOY <- 200
 meteo$JulianDay <- 200
 meteo$MinTemperature <- 20
