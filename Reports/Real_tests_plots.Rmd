@@ -21,6 +21,12 @@ S1 <- readRDS("../Rdata/Puechabon/Real_Puechabon_Sperry.rds")
 S2 <- readRDS("../Rdata/Puechabon/Real_Puechabon_Sureau_Baldocchi.rds")
 ```
 
+*Precipitation & PET*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+plot(S1)
+```
+
 *Vulnerability curves*:
 
 ```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
@@ -96,6 +102,12 @@ S1 <- readRDS("../Rdata/Yatir/Real_Yatir_Sperry.rds")
 S2 <- readRDS("../Rdata/Yatir/Real_Yatir_Sureau_Baldocchi.rds")
 ```
 
+*Precipitation & PET*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+plot(S1)
+```
+
 *Vulnerability curves*:
 
 ```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
@@ -163,11 +175,99 @@ plot_grid(p1, p2, nrow = 2)
 ```
 
 
+
+## Hesse
+
+```{r, echo = FALSE}
+S1 <- readRDS("../Rdata/Hesse/Real_Hesse_Sperry.rds")
+S2 <- readRDS("../Rdata/Hesse/Real_Hesse_Sureau_Baldocchi.rds")
+```
+
+*Precipitation & PET*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+plot(S1)
+```
+
+*Vulnerability curves*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+p1 <- hydraulics_vulnerabilityCurvePlot(S1$spwbInput, type = "stem", vulnerabilityFunction = "Weibull",speciesNames = TRUE)
+p1  <- p1 + theme(legend.position = "none")+labs(title="Sperry (Weibull)")
+p2 <- hydraulics_vulnerabilityCurvePlot(S2$spwbInput, type = "stem", vulnerabilityFunction = "Sigmoid",speciesNames = TRUE)+theme(legend.position = "none")+labs(title="Sureau (Sigmoid)")
+plot_grid(p1, p2, nrow = 1)
+```
+
+*Soil water potentials*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry")+theme(legend.position = "none")
+p2 <- plot(S2, "SoilPsi")+ylim(c(-7,0))+labs(title="Sureau")+theme(legend.position = c(0.1,0.35))
+plot_grid(p1, p2, nrow = 2)
+```
+
+*Hydraulic redistribution*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,1.2))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "HydraulicRedistribution")+ylim(c(0,1.2))+theme(legend.position = c(0.8,0.7))+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+*Leaf water potential range*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-6,0))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-6,0))+theme(legend.position = "none")+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+*Plant transpiration*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+*Stomatal conductance* (shade leaves forced to behave as sunlit leaves):
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "LeafStomatalConductance", bySpecies = TRUE, subdaily = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "LeafStomatalConductance", bySpecies = TRUE, subdaily = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+
+*Stem PLC*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+*Soil-plant conductance*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 5, warning=FALSE}
+p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S2, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
+plot_grid(p1, p2, nrow = 2)
+```
+
+
+
 ## Font-Blanche
 
 ```{r, echo = FALSE}
 S1 <- readRDS("../Rdata/FontBlanche/Real_FontBlanche_Sperry_onepool.rds")
 S2 <- readRDS("../Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_onepool.rds")
+```
+
+*Precipitation & PET*:
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE}
+plot(S1)
 ```
 
 *Vulnerability curves*:

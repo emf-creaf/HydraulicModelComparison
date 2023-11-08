@@ -5,7 +5,7 @@ library(readr)
 library(tidyverse)
 library(cowplot)
 
-source("Rscripts/Ancillary.R")
+source("Rscripts/0_Ancillary.R")
 
 # Terrain -----------------------------------------------------------------
 yat_latitude <- 31.3
@@ -50,7 +50,7 @@ control$rhizosphereOverlap <- "total"
 control$sunlitShade <- FALSE
 
 #Initialize input
-x1 <- puechabon_input(control)
+x1 <- yatir_input(control)
 
 S1 <- spwb(x1, yat_meteo, latitude = yat_latitude, elevation = yat_elevation)
 saveRDS(S1, "Rdata/Yatir/Real_Yatir_Sperry.rds")
@@ -74,14 +74,14 @@ control$sunlitShade <- FALSE
 control$gs_NightFrac <- 0.001
 
 #Initialize input
-x2 <- puechabon_input(control)
+x2 <- yatir_input(control)
 
 S2 <- spwb(x2, yat_meteo, latitude = yat_latitude, elevation = yat_elevation)
 saveRDS(S2, "Rdata/Yatir/Real_Yatir_Sureau_Jarvis.rds")
 
 control$stomatalSubmodel <- "Baldocchi"
 control$leafCuticularTranspiration <- FALSE
-x2b <- puechabon_input(control)
+x2b <- yatir_input(control)
 
 #Call simulation function
 S2b <- spwb(x2b, yat_meteo, latitude = yat_latitude, elevation = yat_elevation)
