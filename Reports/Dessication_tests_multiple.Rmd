@@ -15,9 +15,9 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 ```{r, echo = FALSE, include = FALSE}
 SpParams <- read.table(file="../Tables/SpParams.txt", sep="\t", header = TRUE)
-results_sureau <- read.table(file="../Tables/results_sureau.txt", sep="\t", header = TRUE)
-results_sperry <- read.table(file="../Tables/results_sperry.txt", sep="\t", header = TRUE)
-results_sperry_segmented <- read.table(file="../Tables/results_sperry_segmented.txt", sep="\t", header = TRUE)
+results_sureau <- read.table(file="../Tables/results_sureau_KOPT2.txt", sep="\t", header = TRUE)
+results_sperry <- read.table(file="../Tables/results_sperry_KOPT2.txt", sep="\t", header = TRUE)
+results_sperry_segmented <- read.table(file="../Tables/results_sperry_segmented_KOPT2.txt", sep="\t", header = TRUE)
 
 sel1  <- results_sureau$day_failure_leaf>=50
 sel2  <- results_sperry$day_failure_leaf>=50
@@ -76,6 +76,32 @@ g1 <- ggplot()+
   geom_point(aes(x = results_sureau$day_closure, y = results_sperry$day_closure, col = SpParams$VCstem_P50 - SpParams$Gs_P50))+
   geom_smooth(aes(x = results_sureau$day_closure, y = results_sperry$day_closure), method = "lm")+
   scale_color_continuous("P50 diff")+
+  geom_abline(intercept = 0, slope = 1)+
+  ylim(c(0,365))+xlim(c(0,365))+
+  ylab("Time to stomatal closure in SPERRY")+
+  xlab("Time to stomatal closure in SUREAU")+
+  theme_bw()
+l <- get_legend(g1)
+plot_grid(g1+theme(legend.position = "none"), 
+          g2+theme(legend.position = "none"), 
+          l, nrow = 1, rel_widths = c(1,1,0.3))
+```
+
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g2 <- ggplot()+
+  geom_point(aes(x = results_sureau$day_failure_leaf, y = results_sperry$day_failure_leaf, col = SpParams$plant_kmax))+
+  geom_smooth(aes(x = results_sureau$day_closure, y = results_sperry$day_closure), method = "lm")+
+  geom_abline(intercept = 0, slope = 1)+
+  scale_color_continuous("Plant kmax")+
+  ylim(c(0,365))+xlim(c(0,365))+
+  ylab("Time to hydraulic failure in SPERRY")+
+  xlab("Time to hydraulic failure in SUREAU")+
+  theme_bw()
+g1 <- ggplot()+
+  geom_point(aes(x = results_sureau$day_closure, y = results_sperry$day_closure, col =  SpParams$plant_kmax))+
+  geom_smooth(aes(x = results_sureau$day_closure, y = results_sperry$day_closure), method = "lm")+
+  scale_color_continuous("Plant kmax")+
   geom_abline(intercept = 0, slope = 1)+
   ylim(c(0,365))+xlim(c(0,365))+
   ylab("Time to stomatal closure in SPERRY")+

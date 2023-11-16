@@ -6,8 +6,9 @@ data(SpParamsMED)
 # K option 1
 # Use k_plant as final value and fixed resistance fractions (40 leaves, 30 stem, 40 roots)
 # K option 2
-# Use k_plant to estimate k_leaf and max_height to estimate k_stem, then roots account for 40%
-
+# Use k_plant to estimate k_leaf and max_height to estimate k_stem, 
+# rooting depth to estimate k_root and constant radial root resistance
+K_option <-  2
 
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
@@ -142,9 +143,14 @@ correctKplant <- function(x, kplant) {
   rplant  <- 1/kplant
   x$paramsTranspiration$Plant_kmax <- kplant
   x$paramsTranspiration$VCleaf_kmax <- 1/(rplant*0.4)
+  x$paramsTranspiration$VCleafapo_kmax <- 1/(rplant*0.2)
+  x$paramsTranspiration$kleaf_symp <- 1/(rplant*0.2)
   x$paramsTranspiration$VCstem_kmax <- 1/(rplant*0.3)
   x$paramsTranspiration$VCroot_kmax <- 1/(rplant*0.3)
   x$belowLayers$VCroot_kmax <- x$paramsTranspiration$VCroot_kmax*x$belowLayers$VCroot_kmax/sum(x$belowLayers$VCroot_kmax)
+  x$paramsTranspiration$FR_leaf <- x$paramsTranspiration$Plant_kmax/x$paramsTranspiration$VCleaf_kmax
+  x$paramsTranspiration$FR_stem <- x$paramsTranspiration$Plant_kmax/x$paramsTranspiration$VCstem_kmax
+  x$paramsTranspiration$FR_root <- x$paramsTranspiration$Plant_kmax/x$paramsTranspiration$VCroot_kmax
   medfate:::.updateBelow(x)
   return(x)  
 }
@@ -164,7 +170,7 @@ results$day_failure_leaf <- NA
 results$day_failure_stem <- NA
 
 simSperry <- TRUE
-simSperry_segmented <- FALSE
+simSperry_segmented <- TRUE
 simSureau <- TRUE
 
 results_sperry <- results
@@ -187,17 +193,18 @@ for(sp_index in toProcess) {
       #Initialize control parameters
       control <- defaultControl("Sperry")
       control$subdailyResults <- TRUE
-      control$cavitationRefill <- "none"
+      control$cavitationRefillStem <- "none"
+      control$cavitationRefillLeaves <- "none"
+      control$leafCavitationEffects <- TRUE
       control$bareSoilEvaporation <- FALSE
       control$sapFluidityVariation <- FALSE
-      control$leafCavitationEffects <- TRUE
       control$rhizosphereOverlap <- "total"
       control$sunlitShade <- FALSE
       control$verbose <- FALSE
       
       #Initialize input
       x1 <- forest2spwbInput(forest, soil, SpParams, control)
-      x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
+      if(K_option==1) x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
       
       #Change canopy and soil variables
       x1$canopy$Tair <- 29
@@ -236,10 +243,10 @@ for(sp_index in toProcess) {
       #Initialize control parameters
       control <- defaultControl("Sperry")
       control$subdailyResults <- TRUE
-      control$cavitationRefill <- "none"
+      control$cavitationRefillLeaves <- "total"
+      control$leafCavitationEffects <- FALSE
       control$bareSoilEvaporation <- FALSE
       control$sapFluidityVariation <- FALSE
-      control$leafCavitationEffects <- TRUE
       control$rhizosphereOverlap <- "total"
       control$verbose <- FALSE
 
@@ -250,8 +257,8 @@ for(sp_index in toProcess) {
       SpParamsOne_S$VCleaf_P12 <- NA
       SpParamsOne_S$VCleaf_P88 <- NA
       x1 <- forest2spwbInput(forest, soil, SpParamsOne_S, control)
-      x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
-      
+      if(K_option==1) x1 <- correctKplant(x1, SpParams$plant_kmax[sp_index])
+
       #Change canopy and soil variables
       x1$canopy$Tair <- 29
       x1$canopy$Cair <- 386
@@ -297,7 +304,8 @@ for(sp_index in toProcess) {
       cat(paste0(" SUREAU "))
       control <- defaultControl("Cochard")
       control$subdailyResults <- TRUE
-      control$cavitationRefill <- "none"
+      control$cavitationRefillStem <- "none"
+      control$cavitationRefillLeaves <- "none"
       control$bareSoilEvaporation <- FALSE
       control$plantCapacitance <- TRUE
       control$cavitationFlux <- FALSE
@@ -310,11 +318,7 @@ for(sp_index in toProcess) {
       control$verbose <- FALSE
       
       x2 <- forest2spwbInput(forest, soil, SpParams, control)
-      kleaf_tot <- x2$paramsTranspiration$VCleaf_kmax
-      x2$paramsTranspiration$VCleaf_kmax <- 1/(0.1*(1/kleaf_tot))
-      x2$paramsTranspiration$kleaf_symp <- 1/(0.9*(1/kleaf_tot))
-      x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCroot_kmax +1/x2$paramsTranspiration$VCstem_kmax +1/x2$paramsTranspiration$VCleaf_kmax + 1/x2$paramsTranspiration$kleaf_symp)
-      
+
       #Change canopy and soil variables
       x2$canopy$Tair <- 29
       x2$canopy$Cair <- 386
@@ -324,8 +328,9 @@ for(sp_index in toProcess) {
       S2 <- spwb(x2, meteo, 
                  latitude = pue_latitude, elevation = pue_elevation, 
                  slope = pue_slope, aspect = pue_aspect)
-      x2 <- correctKplant(x2, SpParams$plant_kmax[sp_index])
+      if(K_option==1) x2 <- correctKplant(x2, SpParams$plant_kmax[sp_index])
       
+
       results_sureau$actual_kplant[sp_index] <- S2$spwbOutput$paramsTranspiration$Plant_kmax[1]
       results_sureau$psi_min[sp_index] <- S2$Plants$LeafPsiMin[1]
       results_sureau$gs_max[sp_index] <- S2$SunlitLeaves$GSWMax[1]
@@ -350,8 +355,8 @@ for(sp_index in toProcess) {
   cat(paste0("\n"))
 }
 
-if(simSperry) write.table(results_sperry, "Tables/results_sperry.txt", sep="\t", quote=FALSE)
-if(simSperry_segmented) write.table(results_sperry_segmented, "Tables/results_sperry_segmented.txt", sep="\t", quote=FALSE)
-if(simSureau) write.table(results_sureau, "Tables/results_sureau.txt", sep="\t", quote=FALSE)
+if(simSperry) write.table(results_sperry, paste0("Tables/results_sperry_KOPT",K_option,".txt"), sep="\t", quote=FALSE)
+if(simSperry_segmented) write.table(results_sperry_segmented, paste0("Tables/results_sperry_segmented_KOPT",K_option,".txt"), sep="\t", quote=FALSE)
+if(simSureau) write.table(results_sureau, paste0("Tables/results_sureau_KOPT",K_option,".txt"), sep="\t", quote=FALSE)
 
 

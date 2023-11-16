@@ -6,7 +6,7 @@ library(ggplot2)
 library(tidyverse)
 library(cowplot)
 
-source("Rscripts/0_Ancillary.R")
+source("Rscripts/0d_Ancillary_Hesse.R")
 
 # Terrain -----------------------------------------------------------------
 hes_latitude <- 48.6
@@ -31,7 +31,9 @@ meteo$Precipitation <- 0 # To force dessication
 #Initialize control parameters
 control <- defaultControl("Sperry")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "none"
+control$cavitationRefillStem <- "none"
+control$cavitationRefillLeaves <- "none"
+control$leafCavitationEffects <- TRUE
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- TRUE
@@ -62,7 +64,8 @@ saveRDS(S1, "Rdata/Hesse/Dessication_Hesse_Sperry.rds")
 #Initialize control parameters
 control <- defaultControl("Cochard")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "none"
+control$cavitationRefillStem <- "none"
+control$cavitationRefillLeaves <- "none"
 control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
 control$cavitationFlux <- FALSE
@@ -111,14 +114,14 @@ saveRDS(S2b, "Rdata/Hesse/Dessication_Hesse_Sureau_Baldocchi.rds")
 
 # Sperry (segmented) ------------------------------------------------------
 x1s <- x1
+x1s$control$cavitationRefillLeaves <- "total"
+x1s$control$leafCavitationEffects <- FALSE
 gs_psi50 <- x2j$paramsTranspiration$Gs_P50
 gs_slope <- x2j$paramsTranspiration$Gs_slope
 gs_psi88 <- gs_psi50 + log((1/0.88)-1.0)*(25.0/gs_slope)
-
 wb <- hydraulics_psi2Weibull(psi50 = gs_psi50, psi88 = gs_psi88)
 x1s$paramsTranspiration$VCleaf_c <- wb["c"]
 x1s$paramsTranspiration$VCleaf_d <- wb["d"]
-x1s$control$leafCavitationEffects <- FALSE
 S1s <- spwb(x1s, meteo, 
            latitude = hes_latitude, elevation = hes_elevation, 
            slope = hes_slope, aspect = hes_aspect)

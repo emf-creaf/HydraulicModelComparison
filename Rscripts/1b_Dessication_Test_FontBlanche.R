@@ -5,7 +5,7 @@ library(ggplot2)
 library(tidyverse)
 library(cowplot)
 
-source("Rscripts/0_Ancillary.R")
+source("Rscripts/0b_Ancillary_FontBlanche.R")
 
 # Terrain -----------------------------------------------------------------
 fb_latitude <- 43.24
@@ -30,7 +30,9 @@ meteo$Precipitation <- 0 # To force dessication
 #Initialize control parameters
 control <- defaultControl("Sperry")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "none"
+control$cavitationRefillStem <- "none"
+control$cavitationRefillLeaves <- "none"
+control$leafCavitationEffects <- TRUE
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- FALSE
@@ -72,7 +74,8 @@ saveRDS(S1p, "Rdata/FontBlanche/Dessication_FontBlanche_Sperry_partialpools.rds"
 #Initialize control parameters
 control <- defaultControl("Cochard")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "none"
+control$cavitationRefillStem <- "none"
+control$cavitationRefillLeaves <- "none"
 control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
 control$cavitationFlux <- FALSE
@@ -141,56 +144,4 @@ S2s <- spwb(x2s, meteo,
             latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
 saveRDS(S2s, "Rdata/FontBlanche/Dessication_FontBlanche_Sureau_Baldocchi_disconnection.rds")
-
-
-# Plots -------------------------------------------------------------------
-# p1 <- plot(S1t, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sperry (partial)")
-# p3 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "SoilPsi")+ylim(c(-5,0))+theme(legend.position = c(0.2,0.2))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#               nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/SoilPsi_FontBlanche_Dessication.png", p, width = 10, height = 8)
-# 
-# p1 <- plot(S1t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (partial)")
-# p3 <- plot(S2t, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#               nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/HydraulicRedistribution_FontBlanche_Dessication.png", p, width = 10, height = 8)
-# 
-# p1 <- plot(S1t, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (partial)")
-# p3 <- plot(S2t, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#           nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/LeafPsiRange_FontBlanche_Dessication.png", p, width = 10, height = 8)
-# 
-# 
-# p1 <- plot(S1t, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sperry (partial)")
-# p3 <- plot(S2t, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#               nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/StemPLC_FontBlanche_Dessication.png", p, width = 10, height = 8)
-# 
-# 
-# p1 <- plot(S1t, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.8,0.2))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.8,0.2))+labs(title="Sperry (partial)")
-# p3 <- plot(S2t, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.2,0.8))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#               nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/LeafPLC_FontBlanche_Dessication.png", p, width = 10, height = 8)
-# 
-# p1 <- plot(S1t, "Transpiration", bySpecies = TRUE)+ylim(c(0,3))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (total)")
-# p2 <- plot(S1p, "Transpiration", bySpecies = TRUE)+ylim(c(0,3))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry (partial)")
-# p3 <- plot(S2t, "Transpiration", bySpecies = TRUE)+ylim(c(0,3))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau (total)")
-# p4 <- plot(S2p, "Transpiration", bySpecies = TRUE)+ylim(c(0,3))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau (partial)")
-# p <-plot_grid(p1, p2, p3, p4,
-#               nrow = 2)
-# ggsave2("Plots/FontBlanche_Dessication/Transpiration_FontBlanche_Dessication.png", p, width = 10, height = 8)
 

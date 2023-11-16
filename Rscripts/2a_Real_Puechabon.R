@@ -5,7 +5,7 @@ library(readr)
 library(tidyverse)
 library(cowplot)
 
-source("Rscripts/0_Ancillary.R")
+source("Rscripts/0a_Ancillary_Puechabon.R")
 
 FrFBn_Qilex_LAI2 <- read_table("Data/Puechabon/FrFBn_Qilex_LAI2.csv")
 
@@ -45,7 +45,8 @@ pue_meteo <- read_delim("Data/Puechabon/Climat_Puechabon_site.csv",
 #Initialize control parameters
 control <- defaultControl("Sperry")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "annual"
+control$cavitationRefillStem <- "annual"
+control$cavitationRefillLeaves <- "annual"
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- TRUE
@@ -64,7 +65,8 @@ saveRDS(S1, "Rdata/Puechabon/Real_Puechabon_Sperry.rds")
 #Initialize control parameters
 control <- defaultControl("Cochard")
 control$subdailyResults <- TRUE
-control$cavitationRefill <- "annual"
+control$cavitationRefillStem <- "annual"
+control$cavitationRefillLeaves <- "annual"
 control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
 control$cavitationFlux <- FALSE
@@ -91,15 +93,21 @@ S2b <- spwb(x2b, pue_meteo, latitude = pue_latitude, elevation = pue_elevation)
 saveRDS(S2b, "Rdata/Puechabon/Real_Puechabon_Sureau_Baldocchi.rds")
 
 # Sperry (segmented) ------------------------------------------------------
-x3 <- x1
-wb <- hydraulics_psi2Weibull(psi50 = -4.0, psi88 = -4.5)
-x3$paramsTranspiration$VCleaf_c <- wb["c"]
-x3$paramsTranspiration$VCleaf_d <- wb["d"]
-x3$control$leafCavitationEffects <- FALSE
-S3 <- spwb(x3, pue_meteo, 
+x1s <- x1
+x1s$control$cavitationRefillLeaves <- "total"
+x1s$control$leafCavitationEffects <- FALSE
+gs_psi50 <- x2b$paramsTranspiration$Gs_P50
+gs_slope <- x2b$paramsTranspiration$Gs_slope
+gs_psi88 <- gs_psi50 + log((1/0.88)-1.0)*(25.0/gs_slope)
+wb <- hydraulics_psi2Weibull(psi50 = gs_psi50, psi88 = gs_psi88)
+x1s$paramsTranspiration$VCleaf_c <- wb["c"]
+x1s$paramsTranspiration$VCleaf_d <- wb["d"]
+medfate:::.updateBelow(x1s)
+
+S1s <- spwb(x1s, pue_meteo, 
            latitude = pue_latitude, elevation = pue_elevation, 
            slope = pue_slope, aspect = pue_aspect)
-saveRDS(S3, "Rdata/Puechabon/Real_Puechabon_Sperry_segmented.rds")
+saveRDS(S1s, "Rdata/Puechabon/Real_Puechabon_Sperry_segmented.rds")
 
 # Plots -------------------------------------------------------------------
 # p1 <- plot(S1, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry")+theme(legend.position = c(0.8,0.8))
