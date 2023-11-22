@@ -8,7 +8,8 @@ data(SpParamsMED)
 # K option 2
 # Use k_plant to estimate k_leaf and max_height to estimate k_stem, 
 # rooting depth to estimate k_root and constant radial root resistance
-K_option <-  2
+K_option <-  1
+buildSpParams <- FALSE
 
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
@@ -66,7 +67,7 @@ create_forest <- function(sp_name, height_cm){
 
 # Species parameters ------------------------------------------------------
 
-NewParams <- read_delim("Data/NewParams_Miquel_183Species.csv",
+NewParams <- read_delim("Data/Dataset_GSKplant_ImputedTLP_196Species.csv",
                         escape_double = FALSE, trim_ws = TRUE) |> as.data.frame()
 
 
@@ -75,7 +76,6 @@ NewParams$kplant <- NewParams$kplant_Gs_TLP
 NewParams$fRleaf <- pmax(0.2, 0.70 - 0.011*NewParams$Height_Diaz_m)
 NewParams$kleaf <- 1/(NewParams$fRleaf/NewParams$kplant_Gs_TLP) # Kplant_Gs_meanDB_TLP, Kplant_Gs_constant
 
-# Force k-plant (20% resistance in stem)
 
 # Gs_P50 and Gs_slope
 NewParams$Gs_slope <- (88-12)/(abs(NewParams$Pgs88) - abs(NewParams$Pgs12))
@@ -91,7 +91,7 @@ NewParams$P88_VC <- NewParams$P50_VC + log((1/0.88)-1.0)*(25.0/NewParams$Slope_V
 # Nleaf
 NewParams$Nleaf <- NewParams$Nmass..mg.g.
 
-buildSpParams <- FALSE
+
 if(buildSpParams) {
   SpParams <- medfateutils::initSpParams(NewParams$species, SpParamsDefinition)
   # SpParams$GrowthForm <- ifelse(NewParams$GrowthForm=="T", "Tree", "Shrub")
@@ -133,6 +133,9 @@ if(buildSpParams) {
   SpParams$Nleaf <- NewParams$Nleaf
   SpParams$Vmax298 <- NA
   SpParams$Jmax298 <- NA
+  SpParams$ShdTol_Nii <- NewParams$ShdTol_Nii
+  SpParams$DrgtTol_Nii <- NewParams$DrgtTol_Nii
+  SpParams$DroughtTol_Ellen <- NewParams$DroughtTol_Ellen
   write.table(SpParams, "Tables/SpParams.txt", sep="\t", quote=FALSE)
 } else {
   SpParams <- read.table(file="Tables/SpParams.txt", sep="\t", header = TRUE)
@@ -182,7 +185,7 @@ for(sp_index in toProcess) {
   cat(paste0(sp_index, " Species name: ", results$Species[sp_index]))
 
   cat(paste0(" FOREST "))
-  height <- NewParams$Plant.height..m.[sp_index]*100
+  height <- NewParams$Height_Diaz_m[sp_index]*100
   if(is.na(height)) height <- 2000 # 20 m
   forest <- create_forest( NewParams$species[sp_index],  height)
   
@@ -234,7 +237,7 @@ for(sp_index in toProcess) {
       }
       rm(S1)
       rm(x1)
-    })
+    }, error = function(e){e})
   }
   
   if(simSperry_segmented) {
@@ -287,7 +290,7 @@ for(sp_index in toProcess) {
       rm(S1)
       rm(x1)
       
-    })
+    }, error = function(e){e})
   }
   
   if(simSureau) {
@@ -349,7 +352,7 @@ for(sp_index in toProcess) {
       rm(S2)
       rm(x2)
       
-    })
+    }, error = function(e){e})
   }
   
   cat(paste0("\n"))

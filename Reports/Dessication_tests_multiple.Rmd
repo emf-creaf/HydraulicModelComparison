@@ -2,7 +2,9 @@
 title: "Dessication tests (multiple species)"
 author: "Miquel De Cáceres"
 date: "2023-11-05"
-output: html_document
+output: 
+  html_document:
+    toc: true
 ---
 ```{r, echo = FALSE, message = FALSE, warning=FALSE, include = FALSE}
 library(ggplot2)
@@ -38,7 +40,7 @@ SpParams <- SpParams[sel1 & sel2, ]
 
 A positive relationship exists between Gs_P50 and VC_P50, as well as between VC_P50 and Gswmax. Relationships between Gs_P50 and maximum stomatal conductance (Gswmax) or whole-plant hydraulic conductance (Plant_kmax) have been enforced by construction.
 
-```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 7, warning=FALSE}
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 12, warning=FALSE, message = FALSE}
 g1 <- ggplot(SpParams)+
   geom_point(aes(x = VCstem_P50, y = Gs_P50))+
   geom_abline(intercept= 0, slope = 1)+
@@ -54,9 +56,49 @@ g3 <- ggplot(SpParams)+
 g4 <- ggplot(SpParams)+
   geom_point(aes(x = Gs_P50, y = plant_kmax))+
   theme_bw()
-plot_grid(g1, g2, g3, g4, nrow = 2)
+g5 <- ggplot(SpParams)+
+  geom_point(aes(x = Gswmax, y = plant_kmax))+
+  ylab("Whole-plant hydraulic conductance (OPT1)")+ xlab("Maximum stomatal conductance")+
+  theme_bw()
+g6 <- ggplot(results[results$model=="Sperry",])+
+  geom_point(aes(x = Gswmax, y = actual_kplant))+
+  geom_smooth(aes(x = Gswmax, y = actual_kplant), method ="loess")+
+  ylab("Whole-plant hydraulic conductance (OPT2)")+ xlab("Maximum stomatal conductance")+
+  theme_bw()
+g7 <- ggplot(results[results$model=="Sperry",])+
+  geom_point(aes(x = plant_kmax, y = actual_kplant))+
+  geom_abline(intercept= 0, slope = 1)+
+  xlim(c(0,4))+ylim(c(0,4))+
+  ylab("Whole-plant hydraulic conductance (OPT2)")+ xlab("Whole-plant hydraulic conductance (OPT1)")+
+  theme_bw()
+g8 <- ggplot(results[results$model=="Sperry",])+
+  geom_point(aes(x = Gswmax, y = Gswmin))+
+  ylab("Minimum stomatal conductance")+ xlab("Maximum stomatal conductance")+
+  theme_bw()
+plot_grid(g1, g2, g3, g4, g5, g6, g7, g8, nrow = 4)
 ```
 
+
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 8, warning=FALSE, message = FALSE}
+g1 <- ggplot(SpParams)+
+  geom_point(aes(x = DrgtTol_Nii, y = VCstem_P50))+
+  geom_smooth(aes(x = DrgtTol_Nii, y = VCstem_P50), method ="loess")+
+  theme_bw()
+g2 <- ggplot(SpParams)+
+  geom_point(aes(x = DrgtTol_Nii, y = Gs_P50))+
+  geom_smooth(aes(x = DrgtTol_Nii, y = Gs_P50), method ="loess")+
+  theme_bw()
+g3 <- ggplot(SpParams)+
+  geom_point(aes(x = DroughtTol_Ellen, y = VCstem_P50))+
+  geom_smooth(aes(x = DroughtTol_Ellen, y = VCstem_P50), method ="loess")+
+  theme_bw()
+g4 <- ggplot(SpParams)+
+  geom_point(aes(x = DroughtTol_Ellen, y = Gs_P50))+
+  geom_smooth(aes(x = DroughtTol_Ellen, y = Gs_P50), method ="loess")+
+  theme_bw()
+plot_grid(g1, g2, g3, g4, nrow = 3)
+```
 
 *Model coincidence in closure and failure*:
 
@@ -220,5 +262,55 @@ g2 <- ggplot(results)+
 plot_grid(g1, g2, nrow = 1)
 ```
 
+*Relationship between Minimum stomatal conductance and day to closure and hydraulic failure*:
 
 
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = Gswmin, y = day_closure, col = model))+
+  geom_smooth(aes(x = Gswmin, y = day_closure, col = model))+
+  xlab("Minimum stomatal conductance (mol)")+ ylab("Time to stomatal closure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = Gswmin, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = Gswmin, y = day_failure_stem, col = model))+
+  xlab("Minimum stomatal conductance (mol)")+ ylab("Time to hydraulic failure")+
+  ylim(c(0,365))+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = "none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = DrgtTol_Nii, y = day_closure, col = model))+
+  geom_smooth(aes(x = DrgtTol_Nii, y = day_closure, col = model))+
+  ylab("Time to stomatal closure")+ xlab("DrgtTol_Nii")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = DrgtTol_Nii, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = DrgtTol_Nii, y = day_failure_stem, col = model))+
+  ylab("Time to hydraulic failure")+ xlab("DrgtTol_Nii")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position ="none")
+plot_grid(g1, g2, nrow = 1)
+```
+
+```{r, echo=FALSE, fig = TRUE, fig.width=8, fig.height = 3.5, warning=FALSE, message = FALSE}
+g1 <- ggplot(results)+
+  geom_point(aes(x = DroughtTol_Ellen, y = day_closure, col = model))+
+  geom_smooth(aes(x = DroughtTol_Ellen, y = day_closure, col = model))+
+  ylab("Time to stomatal closure")+ xlab("DroughtTol_Ellen")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position = c(0.8,0.8))
+g2 <- ggplot(results)+
+  geom_point(aes(x = DroughtTol_Ellen, y = day_failure_stem, col = model))+
+  geom_smooth(aes(x = DroughtTol_Ellen, y = day_failure_stem, col = model))+
+  ylab("Time to hydraulic failure")+ xlab("DroughtTol_Ellen")+
+  scale_color_discrete("")+
+  theme_bw()+theme(legend.position ="none")
+plot_grid(g1, g2, nrow = 1)
+```

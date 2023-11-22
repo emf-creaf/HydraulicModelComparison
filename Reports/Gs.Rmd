@@ -1,63 +1,95 @@
 ---
-title: "On stomatal regulation"
+title: "On stomatal regulation in SurEau/MEDFATE"
 author: "M. De Cáceres, N. Martin-StPaul"
-date: "2023-10-31"
+date: "2023-11-21"
 output:
-  word_document: default
+  pdf_document: default
   html_document: default
+  word_document: default
+bibliography: references.bib
 ---
 
-### On estimating the slope between photosynthesis and stomatal conductance
+## Brief review of semi-empirical stomatal conductance models
 
-We start with Ball's equation relating photosynthesis and stomatal conductance (at full turgor):
-
-$$
-G_{s, ft}(A_n/C_s) = m \cdot (A_n/C_s) + b_0
-$$
-
-The same relationship should hold between maximum values:
-$$
-G_{s,ft, max} = m \cdot (A_{n,max}/C_s) + b_0
-$$
-If $G_{s,ft, max}$, $b_0$ and $A_{n, max}$ are known, and assuming we can estimate $m$ using:
+Ball et al. [-@biggins_model_1987] found that the interaction of several environmental factors on stomatal conductance to water vapour ($g_{sw}$) could be summarised by the empirical formula:
 
 $$
-m = (G_{s,ft, max} - b_0)\cdot C_s/A_{n,max}
+g_{sw} = g_1 \cdot \frac{A_n \cdot h_r}{c_s} + g_0
 $$
 
-$G_{s,ft, max}$ is an available trait for many species (or at least easier to obtain than calibrating the equation from empirical data sets), and $A_{n,max}$ can be estimated assuming $G_{s} = G_{s, max}$, at $T_{leaf} = 25\,ºC$, $C_{s} = 386\,ppm$ and saturated light conditions using Farqhuar's model. In this way we will have that given $V_{cmax}$, $J_{max}$ and $G_{s,max}$, the relationship between $G_{s, ft}$ and $A_{n}/C_s$ is determined. Nico: VPD or RH is also important in gaz exchange measurement
-Take care as in general A, Gs, T, RH, are recorded together
+where $A_n$ is the net photosynthesis, $h_r$ is relative humidity, $c_s$ is the CO2 concentration at the leaf surface. $g_0$ is the stomatal conductance when $A_n = 0$ at the light compensation point and $g_1$ is an empirical coefficient representing stomatal water use efficiency at 100% relative humidity. Baldocchi [-@baldocchi_analytical_1994] derived an analytical solution for the coupled equations describing leaf photosynthesis and Ball's [-@biggins_model_1987] equation for stomatal conductance. 
 
-### Stomatal conductance and nocturnal transpiration
-
-The equation for $G_{s, ft}$ can produce values below $b_{0}$ (and even negative $G_{s}$ values) when $A_{n} < 0$. In the Ball model, $b_{0}$ is the stomatal conductance at the light compensation point. If we assume that $b_0 = G_{s,ft,night}$, the nocturnal conductance at full turgor, then it seems reasonable to redefine $G_{s,ft}$ to constrain it as follows:
+A first modification of Ball's equation was proposed by Leuning [-@leuning_modelling_1990], where $c_s$ was replaced by $c_s - \Gamma$, where $\Gamma$ is the CO2 compensation point:
+$$
+g_{sw} = g_1 \cdot \frac{A_n \cdot h_r}{c_s -\Gamma} + g_0
+$$
+He argued that the use of $c_s - \Gamma$ was more appropriate since $A_n \to 0$ when $c_s \to \Gamma$. Leuning [-@leuning_modelling_1990] provided a quadratic equation for the simultaneous solving of $A_n$, $g_{sw}$ and $c_i$, the CO2 concentration in the intercellular spaces of the leaf. Later on, Leuning [-@leuning_critical_1995] considered two alternative forms for the dependence of stomatal conductance on vapour pressure deficit $D$, a linear and hyperbolic dependence, and found that a hyperbolic dependence provided a better fit to experimental data. The resulting model has the following form:
 
 $$
-G_{s, ft}(A_n/C_s) = \max(G_{s,ft,night}, m \cdot (A_n/C_s) + G_{s,ft,night})
+g_{sw} = g_1 \cdot \frac{A_n \cdot h_r}{(c_s -\Gamma) \cdot (1 - D/D_0)} + g_0
+$$
+where $D_0$ is an additional parameter regulating the effect of $D$ on $g_{sw}$. A practical problem with Leuning's [-@leuning_critical_1995] equation is that the parameters $g_1$ and $D_0$ are very strongly correlated.
+
+More recently Medlyn et al. [-@medlyn_reconciling_2011] proposed an optimality-based stomatal conductance model that could be approximated using:
+$$
+g_{sw} \approx g_1 \cdot \left(1 + \frac{g_1}{\sqrt(D)}\right) \frac{A_n}{c_s} + g_0
 $$
 
-Assuming that $G_{s,ft, night}$ is a constant fraction of $G_{s,ft, max}$ (i.e. $5\%$) then $m$ can be estimated as indicated using:
+which predicts a close linear relationship similar to the previous models.
+
+A common limitation of the previous models is that they do not account for soil water deficit in stomatal behaviour, only focusing on atmospheric effects. Already Leuning [-@leuning_critical_1995] admitted that his model performed better with well-watered plants. One way to address this is to replace the role of $h_r$  in Leuning's equation by a factor representing soil water limitation  [@paschalis_when_2023]:
 
 $$
-m = G_{s,ft, max} \cdot (1 - 0.05)\cdot C_s/A_{n,max}
+g_{sw} = g_1 \cdot \frac{A^{pot}_n \cdot f_s(\Psi_s)}{(c_i -\Gamma) \cdot (1 - D/D_0)} + g_0
 $$
-
-Note that Resco de Dios et al. (2019) found that $G_{s, night}$ was correlated with growth rate, as are $G_{s, max}$ and $V_{cmax}$, which would support the use of a constant fraction.
-
-### Stomatal conductance under varying water potentials
-
-Once $m$ is estimated, we can calculate $G_{s,ft}$ using Baldocchi's approach. However, we know $G_s$ should range between $G_{s,ft}$ and $G_{s, res}$, the residual stomatal conductance due to incomplete closure, for varying water potentials (here VPD or RH effects would be assumed to operate through changing the water potential via hydraulic mechanisms). The variation of water potential is related to turgor loss, the accumulation of absicic acid... but it is hard to model the exact relationship between these proximal processes and $G_s$. Furthermore, it seems not very intuitive to me to change the $G_s$ vs. $A$ relationship due to turgor loss, because it should instead limit its maximum value due mechanical constraints in the guard cells. It is perhaps more practical to continue using an empirical Sigmoid function $f(\Psi)$ with parameters $\Psi_{50,gs}$ and $slope_{gs}$, so that:
+where $A_n^{pot}$ would be the photosynthesis under non-stressed conditions and the reduction factor $f_s$ is modelled using a sigmoid function of soil water potential ($\Psi_s$) averaged across soil layers. Since they can model plant hydraulics, Paschalis et al. [-@paschalis_when_2023] also suggest another modification where the influence of $D$ is replaced by a factor $f_l$ that accounts for water potential difference between the soil and the leaves ($| \Psi_s - \Psi_l|$):
 
 $$
-G_{s} = G_{s, ft} \cdot f(\Psi) + G_{s, res} \cdot (1 - f(\Psi))
+g_{sw} = g_1 \cdot \frac{A^{pot}_n \cdot f_s(\Psi_s) \cdot f_l(| \Psi_s - \Psi_l|)}{(c_i -\Gamma)} + g_0
 $$
-assuming $G_{s, res}$ is the residual stomatal conductance due to incomplete closure. Of course, $A_n$ needs to be recalculated after limiting $G_s$. If transpiration due to $G_{s,res}$ is dealt along with cuticular transpiration, a simpler approach to $G_s$ is:
+Paschalis et al. [-@paschalis_when_2023] argue that $f_l$ provides a similar functionality to the term $(1+D/D_0)^{-1}$ of the Leuning's model, but depending on the dynamics of the hydraulic system. Note that in the two latter equations $c_i$ is used instead of $c_s$.
+
+## Our proposal
+
+### Stomatal conductance model
+Similarly to Paschalis et al. [-@paschalis_when_2023], we would like to have a stomatal regulation model accounting for plant hydraulics, which we intend to use in combination with Sureau-ECOS [@ruffault_sureau-ecos_2022]. However, unlike them we think that a single factor $f$ based on leaf water pontetial (mechanistically related to the loss of turgor or the accumulation of abscisic acid in leaves), should decrease $g_{sw}$ following either soil drought or a high evaporative demand. In other words, $\Psi_l$ (and hence $f$) should respond to the decrease in $\Psi_s$ and to high values of $D$ thanks to its effects on the plant hydraulics submodel. Furthermore, the reduction factor $f$ should not alter the linear relationship between $A_n/c_s$ and $g_{sw}$ (i.e. the response to light), but rather set a limit to $g_{sw}$ due to the loss of turgor in guard cells. As a corollary to the last premise, factor $f$ should affect the stomatal conductance both during the day and at night. Finally, the decrease of leaf water potential should not drive $g_{sw}$ to zero, since there should also be a residual stomatal conductance $g_{sw,res}$.
+
+With the former premises, we suggest the following equation for $g_{sw}$:
 $$
-G_{s} = G_{s, ft} \cdot f(\Psi)
+g_{sw} = g_{sw,ft} \cdot f(\Psi_l) + g_{sw,res} \cdot (1- f(\Psi_l))
+$$
+where $g_{sw,ft}$ would be the stomatal conductance at full turgor (i.e., under non-stressed conditions) and $g_{sw,res}$ would be the residual stomatal conductance due to incomplete stomatal closure with drought. To model $f$ we suggest using a single Sigmoid function of $\Psi_l$ with parameters $\Psi_{50,gs}$ and $slope_{gs}$. If transpiration due to incomplete stomatal closure, $g_{sw,res}$, is dealt along with cuticular transpiration, a simpler approach to $g_{sw}$ is:
+$$
+g_{sw} = g_{sw, ft} \cdot f(\Psi_l)
 $$
 
+To determine $g_{sw, ft}$, we suggest going back to Ball's [-@biggins_model_1987] equation but neglecting the effect of $h_r$ (which is now represented in $f(\Psi_l)$):
+
+$$
+g_{sw, ft} = g_1 \cdot \frac{A_n}{c_s} + g_0
+$$
+Assuming $g_{sw} = g_0 = g_{sw, night}$ when $A_n \leq 0$ we modify the equation as follows:
+
+$$
+g_{sw,ft} = \max \left( g_0, g_1 \cdot \frac{A_n}{c_s} + g_0 \right)
+$$
+In practice, Baldocchi's [-@baldocchi_analytical_1994] analytical solution can be used to determine $g_{sw,ft}$, which is bounded by $g_0$. Then factor $f(\Psi_l)$ is applied to determine $g_{sw}$ and both $A_n$ and $c_i$ need to be recomputed. Provided that a sufficiently small step is used, the estimation of $A_n$ and $g_{sw}$ can be updated once per time step and the estimated $g_{sw}$ will feedback on $\Psi_l$ in the next time step following the plant hydraulics sub-model.
+
+### Parameterization
+
+Parameters $\Psi_{50,gs}$ and $slope_{gs}$ can be estimated from empirical data of the response of stomatal conductance to water potential (i.e. the vulnerability curve of $g_{sw}$), or use the water potential at turgor loss point as a surrogate to $\Psi_{50,gs}$. 
+
+Parameters $g_1$ and $g_0$ can be estimated from photosynthesis data using measurements corresponding to low $D$ (i.e. high $h_r$) and well-watered plants. If not available, we suggest the following. Ball's relationship should hold between maximum values:
+$$
+g_{sw,max} = g_1 \cdot \frac{A_{n,max}}{c_s} + g_0
+$$
+If $g_{sw,max}$, $g_0$ and $A_{n, max}$ are known, we can estimate $g_1$ using:
+
+$$
+g_1 = (g_{sw, max} - g_0)\cdot \frac{c_s}{A_{n,max}} 
+$$
+
+$g_{sw,max}$ is an available trait for many species (or at least it seems more straightforward to obtain than obtaining empirical photosynthesis data to calibrate Ball's equation), and we can assume $g_0 = g_{sw, night}$ is a constant fraction of $g_{sw, max}$ (e.g. 5%). Note that Resco de Dios et al. [-@resco_de_dios_assessing_2019] found that $G_{s, night}$ was correlated with growth rate, as are $G_{s, max}$ and $V_{cmax}$, which would support the use of a constant fraction. Finally, $A_{n,max}$ can be estimated assuming $g_{sw} = g_{sw, max}$, at $T_{leaf} = 25\,ºC$, $c_{s} = 386\,ppm$ and saturated light conditions using Farqhuar's model. In this way we will have that given $V_{cmax}$, $J_{max}$ and $g_{sw,max}$, the linear relationship between $g_{sw, ft}$ and $A_{n}/c_s$ is determined. 
 
 
-References
-
-Resco de Dios et al. (2019): https://nph.onlinelibrary.wiley.com/doi/full/10.1111/nph.15881
+## References
