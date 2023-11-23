@@ -8,4 +8,7 @@ Tables/*
 Rdata/*
 Reports/*.html
 Reports/*.docx
+Reports/*.pdf
+Reports/*.log
+Reports/kk.bib
 *.pptx
