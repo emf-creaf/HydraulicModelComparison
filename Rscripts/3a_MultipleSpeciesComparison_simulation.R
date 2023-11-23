@@ -251,6 +251,7 @@ for(sp_index in toProcess) {
       control$bareSoilEvaporation <- FALSE
       control$sapFluidityVariation <- FALSE
       control$rhizosphereOverlap <- "total"
+      control$sunlitShade <- FALSE
       control$verbose <- FALSE
 
       #Initialize input
@@ -317,6 +318,7 @@ for(sp_index in toProcess) {
       control$stemCuticularTranspiration <- FALSE
       control$rhizosphereOverlap <- "total"
       control$stomatalSubmodel <- "Baldocchi"
+      control$sunlitShade <- FALSE
       control$gs_NightFrac <- 0.001
       control$verbose <- FALSE
       

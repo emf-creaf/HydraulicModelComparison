@@ -80,6 +80,7 @@ control$leafCuticularTranspiration <- TRUE
 control$stemCuticularTranspiration <- TRUE
 control$rhizosphereOverlap <- "total"
 control$stomatalSubmodel <- "Baldocchi"
+control$sunlitShade <- FALSE
 control$gs_NightFrac <- 0.05
 control$verbose <- FALSE
 
@@ -93,21 +94,34 @@ x_initial$soil$Temp <- c(32,29,27.71661)
 # Test parameter modification ---------------------------------------------
 tarcoh <- "T1_168"
 parNames = c("rfc@2",
-             paste0(tarcoh,c("/Z95", "/LAI_live", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VCstem_P50", "/Vsapwood")))
-customParams <- c(10,500, 0.5, 1.0, 0.2, 150, -3, 0.003, -4, 2)
+             paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VCstem_P50", "/Vsapwood")))
+red_exclude <- c(1,2)
+parNames_red <- parNames[-red_exclude]
+
+customParams <- c(10,0.5, 500, 1.0, 0.2, 150, -3, 0.003, -4, 2)
 names(customParams) <- parNames
+
+customParams_red <- customParams[-red_exclude]
+names(customParams_red) <- parNames_red
+
 x_mod <- modifyInputParams(x_initial, customParams)
 
 
 # Optimization functions --------------------------------------------------
-parMin <- c(10,500, 0.5, 0.5, 0.1, 100, -3.5, 0.001, -5.5, 0.1)
-parMax <- c(90,2500, 6.0, 2.0, 0.4, 200, -1.5, 0.004, -1.5, 1.0)
+parMin <- c(10,1, 500, 0.3, 0.1, 20, -4.0, 0.001, -12.0, 1.0)
+parMax <- c(90,7, 6000, 4.0, 0.5, 100, -0.7, 0.010, -1.0, 30.0)
+parMin_red <-parMin[-red_exclude]
+parMax_red <-parMax[-red_exclude]
 
 # First day with maximum gs < 5% of gsmax in Sunlit leaves
 sf_timetoclosure<-function(x){
   gswmax <- x$SunlitLeaves$GSWMax
-  which(gswmax < x$spwbInput$paramsTranspiration$Gswmax*0.05)[1] 
+  if(all(is.na(gswmax))) return(1)
+  ttc <- which(gswmax < x$spwbInput$paramsTranspiration$Gswmax*0.05)[1] 
+  if(is.na(ttc)) return(length(gswmax))
+  return(ttc)
 }
+
 #First day with missing StemPLC, meaning it stoped before
 sf_timetofailure<-function(x){ 
   which(is.na(x$Plants$StemPLC))[1]
@@ -117,7 +131,10 @@ sf_survivaltime<-function(x){
   sf_timetofailure(x) - sf_timetoclosure(x)
 }
 
-
+# Cumulated GPP to death
+sf_gpp<-function(x){
+  sum(x$Plants$GrossPhotosynthesis, na.rm=TRUE)
+}
 of_timetoclosure<-optimization_function(parNames = parNames,
                                      x = x_initial,
                                      meteo = meteo,
@@ -125,12 +142,24 @@ of_timetoclosure<-optimization_function(parNames = parNames,
                                      slope = pue_slope, aspect = pue_aspect,
                                      summary_function = sf_timetoclosure)
 
+of_timetoclosure_red<-optimization_function(parNames = parNames_red,
+                                        x = x_initial,
+                                        meteo = meteo,
+                                        latitude = pue_latitude, elevation = pue_elevation,
+                                        slope = pue_slope, aspect = pue_aspect,
+                                        summary_function = sf_timetoclosure)
 of_timetofailure<-optimization_function(parNames = parNames,
                                      x = x_initial,
                                      meteo = meteo,
                                      latitude = pue_latitude, elevation = pue_elevation,
                                      slope = pue_slope, aspect = pue_aspect,
                                      summary_function = sf_timetofailure)
+of_timetofailure_red<-optimization_function(parNames = parNames_red,
+                                        x = x_initial,
+                                        meteo = meteo,
+                                        latitude = pue_latitude, elevation = pue_elevation,
+                                        slope = pue_slope, aspect = pue_aspect,
+                                        summary_function = sf_timetofailure)
 
 of_survivaltime<-optimization_function(parNames = parNames,
                                         x = x_initial,
@@ -138,17 +167,37 @@ of_survivaltime<-optimization_function(parNames = parNames,
                                         latitude = pue_latitude, elevation = pue_elevation,
                                         slope = pue_slope, aspect = pue_aspect,
                                         summary_function = sf_survivaltime)
+of_survivaltime_red<-optimization_function(parNames = parNames_red,
+                                       x = x_initial,
+                                       meteo = meteo,
+                                       latitude = pue_latitude, elevation = pue_elevation,
+                                       slope = pue_slope, aspect = pue_aspect,
+                                       summary_function = sf_survivaltime)
 
-of_timetoclosure(parMin)
-of_timetoclosure(parMax)
-of_timetofailure(parMin)
-of_timetofailure(parMax)
-of_survivaltime(parMin)
-of_survivaltime(parMax)
+of_gpp<-optimization_function(parNames = parNames,
+                                       x = x_initial,
+                                       meteo = meteo,
+                                       latitude = pue_latitude, elevation = pue_elevation,
+                                       slope = pue_slope, aspect = pue_aspect,
+                                       summary_function = sf_gpp)
+of_gpp_red<-optimization_function(parNames = parNames_red,
+                                           x = x_initial,
+                                           meteo = meteo,
+                                           latitude = pue_latitude, elevation = pue_elevation,
+                                           slope = pue_slope, aspect = pue_aspect,
+                                           summary_function = sf_gpp)
+# of_timetoclosure(parMin)
+# of_timetoclosure(parMax)
+# of_timetofailure(parMin)
+# of_timetofailure(parMax)
+# of_survivaltime(parMin)
+# of_survivaltime(parMax)
+# of_gpp(parMin)
+# of_gpp(parMax)
 
 
 # Parameter matrices ------------------------------------------------------
-n <- 10
+n <- 5
 p <- length(parMin)
 M1 <- sweep(matrix(runif(p * n), nrow = n),2,STATS = (parMax-parMin), FUN = "*")
 M1 <- sweep(M1, 2, parMin, FUN="+")
@@ -158,6 +207,9 @@ M2 <- sweep(matrix(runif(p * n), nrow = n),2,STATS = (parMax-parMin), FUN = "*")
 M2 <- sweep(M2, 2, parMin, FUN="+")
 X2 <- data.frame(M2)
 names(X2)<-parNames
+
+X1_red <- X1[,-red_exclude]
+X2_red <- X2[,-red_exclude]
 
 # Parallelization functions --------------------------------------------------------
 ncores <- 6
@@ -200,28 +252,126 @@ mult_survivaltime <- function(X) {
   print(summary(r))
   return(r)
 }
+mult_gpp <- function(X) {
+  cat(paste0("Entering mult_gpp n = ", nrow(X), "\n"))
+  doParallel::registerDoParallel(cores = ncores)
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+    v <- as.numeric(X[index,])
+    names(v) <- names(X)
+    of_gpp(v, verbose = FALSE)
+  }
+  doParallel::stopImplicitCluster()
+  r<- unlist(r)
+  print(summary(r))
+  return(r)
+}
+mult_timetoclosure_red <- function(X) {
+  cat(paste0("Entering mult_timetoclosure n = ", nrow(X), "\n"))
+  doParallel::registerDoParallel(cores = ncores)
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+    v <- as.numeric(X[index,])
+    names(v) <- names(X)
+    of_timetoclosure_red(v, verbose = FALSE)
+  }
+  doParallel::stopImplicitCluster()
+  r<- unlist(r)
+  print(summary(r))
+  return(r)
+}
+mult_timetofailure_red <- function(X) {
+  cat(paste0("Entering mult_timetofailure n = ", nrow(X), "\n"))
+  doParallel::registerDoParallel(cores = ncores)
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+    v <- as.numeric(X[index,])
+    names(v) <- names(X)
+    of_timetofailure_red(v, verbose = FALSE)
+  }
+  doParallel::stopImplicitCluster()
+  r<- unlist(r)
+  print(summary(r))
+  return(r)
+}
+mult_survivaltime_red <- function(X) {
+  cat(paste0("Entering mult_survivaltime n = ", nrow(X), "\n"))
+  doParallel::registerDoParallel(cores = ncores)
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+    v <- as.numeric(X[index,])
+    names(v) <- names(X)
+    of_survivaltime_red(v, verbose = FALSE)
+  }
+  doParallel::stopImplicitCluster()
+  r<- unlist(r)
+  print(summary(r))
+  return(r)
+}
+mult_gpp_red <- function(X) {
+  cat(paste0("Entering mult_gpp n = ", nrow(X), "\n"))
+  doParallel::registerDoParallel(cores = ncores)
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+    v <- as.numeric(X[index,])
+    names(v) <- names(X)
+    of_gpp_red(v, verbose = FALSE)
+  }
+  doParallel::stopImplicitCluster()
+  r<- unlist(r)
+  print(summary(r))
+  return(r)
+}
 
-mult_timetoclosure(X1[1:6,])
-mult_timetofailure(X1[1:6,])
-mult_survivaltime(X1[1:6,])
+# mult_timetoclosure(X1[1:ncores,])
+# mult_timetofailure(X1[1:ncores,])
+# mult_survivaltime(X1[1:ncores,])
+# mult_gpp(X1[1:ncores,])
 
 # Sensitivity analyses ----------------------------------------------------
 nboot <- 0
 
+#FULL
 sa_salt_timetoclosure <- sobolSalt(model = mult_timetoclosure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetoclosure, "Rdata/sa_salt_timetoclosure.rds")
+saveRDS(sa_salt_timetoclosure, "Rdata/sensitivity/sa_salt_timetoclosure.rds")
 print(sa_salt_timetoclosure)
 ggplot(sa_salt_timetoclosure, choice=1)
 
 sa_salt_timetofailure <- sobolSalt(model = mult_timetofailure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetofailure, "Rdata/sa_salt_timetofailure.rds")
+saveRDS(sa_salt_timetofailure, "Rdata/sensitivity/sa_salt_timetofailure.rds")
 print(sa_salt_timetofailure)
 ggplot(sa_salt_timetofailure, choice=1)
 
 sa_salt_survivaltime <- sobolSalt(model = mult_survivaltime, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_survivaltime, "Rdata/sa_salt_survivaltime.rds")
+saveRDS(sa_salt_survivaltime, "Rdata/sensitivity/sa_salt_survivaltime.rds")
 print(sa_salt_survivaltime)
 ggplot(sa_salt_survivaltime, choice=1)
+
+sa_salt_gpp <- sobolSalt(model = mult_gpp, X1, X2,
+                                  scheme="A", nboot = nboot)
+saveRDS(sa_salt_gpp, "Rdata/sensitivity/sa_salt_gpp.rds")
+print(sa_salt_gpp)
+ggplot(sa_salt_gpp, choice=1)
+
+#REDUCED
+sa_salt_timetoclosure_red <- sobolSalt(model = mult_timetoclosure_red, X1_red, X2_red,
+                                   scheme="A", nboot = nboot)
+saveRDS(sa_salt_timetoclosure_red, "Rdata/sensitivity/sa_salt_timetoclosure_red.rds")
+print(sa_salt_timetoclosure_red)
+ggplot(sa_salt_timetoclosure_red, choice=1)
+
+sa_salt_timetofailure_red <- sobolSalt(model = mult_timetofailure_red, X1_red, X2_red,
+                                   scheme="A", nboot = nboot)
+saveRDS(sa_salt_timetofailure_red, "Rdata/sensitivity/sa_salt_timetofailure_red.rds")
+print(sa_salt_timetofailure_red)
+ggplot(sa_salt_timetofailure_red, choice=1)
+
+sa_salt_survivaltime_red <- sobolSalt(model = mult_survivaltime_red, X1_red, X2_red,
+                                  scheme="A", nboot = nboot)
+saveRDS(sa_salt_survivaltime_red, "Rdata/sensitivity/sa_salt_survivaltime_red.rds")
+print(sa_salt_survivaltime_red)
+ggplot(sa_salt_survivaltime_red, choice=1)
+
+sa_salt_gpp_red <- sobolSalt(model = mult_gpp_red, X1_red, X2_red,
+                                      scheme="A", nboot = nboot)
+saveRDS(sa_salt_gpp_red, "Rdata/sensitivity/sa_salt_gpp_red.rds")
+print(sa_salt_gpp_red)
+ggplot(sa_salt_gpp_red, choice=1)
