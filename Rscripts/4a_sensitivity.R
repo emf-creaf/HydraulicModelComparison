@@ -7,6 +7,12 @@ library(ggplot2)
 library(doParallel)
 library(boot)
 
+
+# Sensitivity parameters --------------------------------------------------
+n <- 1000 # Number of rows (combinations) in the parameter matrices
+nboot <- 10 # Number of bootstrap samples
+ncores <- 20 # Number of cores
+
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
 pue_elevation <- 270
@@ -94,7 +100,7 @@ x_initial$soil$Temp <- c(32,29,27.71661)
 # Test parameter modification ---------------------------------------------
 tarcoh <- "T1_168"
 parNames = c("rfc@2",
-             paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VCstem_P50", "/Vsapwood")))
+             paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VC_P50", "/Vsapwood")))
 red_exclude <- c(1,2)
 parNames_red <- parNames[-red_exclude]
 
@@ -197,7 +203,6 @@ of_gpp_red<-optimization_function(parNames = parNames_red,
 
 
 # Parameter matrices ------------------------------------------------------
-n <- 5
 p <- length(parMin)
 M1 <- sweep(matrix(runif(p * n), nrow = n),2,STATS = (parMax-parMin), FUN = "*")
 M1 <- sweep(M1, 2, parMin, FUN="+")
@@ -212,7 +217,6 @@ X1_red <- X1[,-red_exclude]
 X2_red <- X2[,-red_exclude]
 
 # Parallelization functions --------------------------------------------------------
-ncores <- 6
 mult_timetoclosure <- function(X) {
   cat(paste0("Entering mult_timetoclosure n = ", nrow(X), "\n"))
   doParallel::registerDoParallel(cores = ncores)
@@ -324,54 +328,37 @@ mult_gpp_red <- function(X) {
 # mult_gpp(X1[1:ncores,])
 
 # Sensitivity analyses ----------------------------------------------------
-nboot <- 0
 
 #FULL
 sa_salt_timetoclosure <- sobolSalt(model = mult_timetoclosure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetoclosure, "Rdata/sensitivity/sa_salt_timetoclosure.rds")
-print(sa_salt_timetoclosure)
-ggplot(sa_salt_timetoclosure, choice=1)
+saveRDS(sa_salt_timetoclosure, "Rdata/sensitivity/SurEau/sa_salt_timetoclosure.rds")
 
 sa_salt_timetofailure <- sobolSalt(model = mult_timetofailure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetofailure, "Rdata/sensitivity/sa_salt_timetofailure.rds")
-print(sa_salt_timetofailure)
-ggplot(sa_salt_timetofailure, choice=1)
+saveRDS(sa_salt_timetofailure, "Rdata/sensitivity/SurEau/sa_salt_timetofailure.rds")
 
 sa_salt_survivaltime <- sobolSalt(model = mult_survivaltime, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_survivaltime, "Rdata/sensitivity/sa_salt_survivaltime.rds")
-print(sa_salt_survivaltime)
-ggplot(sa_salt_survivaltime, choice=1)
+saveRDS(sa_salt_survivaltime, "Rdata/sensitivity/SurEau/sa_salt_survivaltime.rds")
 
 sa_salt_gpp <- sobolSalt(model = mult_gpp, X1, X2,
                                   scheme="A", nboot = nboot)
-saveRDS(sa_salt_gpp, "Rdata/sensitivity/sa_salt_gpp.rds")
-print(sa_salt_gpp)
-ggplot(sa_salt_gpp, choice=1)
+saveRDS(sa_salt_gpp, "Rdata/sensitivity/SurEau/sa_salt_gpp.rds")
 
 #REDUCED
 sa_salt_timetoclosure_red <- sobolSalt(model = mult_timetoclosure_red, X1_red, X2_red,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetoclosure_red, "Rdata/sensitivity/sa_salt_timetoclosure_red.rds")
-print(sa_salt_timetoclosure_red)
-ggplot(sa_salt_timetoclosure_red, choice=1)
+saveRDS(sa_salt_timetoclosure_red, "Rdata/sensitivity/SurEau/sa_salt_timetoclosure_red.rds")
 
 sa_salt_timetofailure_red <- sobolSalt(model = mult_timetofailure_red, X1_red, X2_red,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetofailure_red, "Rdata/sensitivity/sa_salt_timetofailure_red.rds")
-print(sa_salt_timetofailure_red)
-ggplot(sa_salt_timetofailure_red, choice=1)
+saveRDS(sa_salt_timetofailure_red, "Rdata/sensitivity/SurEau/sa_salt_timetofailure_red.rds")
 
 sa_salt_survivaltime_red <- sobolSalt(model = mult_survivaltime_red, X1_red, X2_red,
                                   scheme="A", nboot = nboot)
-saveRDS(sa_salt_survivaltime_red, "Rdata/sensitivity/sa_salt_survivaltime_red.rds")
-print(sa_salt_survivaltime_red)
-ggplot(sa_salt_survivaltime_red, choice=1)
+saveRDS(sa_salt_survivaltime_red, "Rdata/sensitivity/SurEau/sa_salt_survivaltime_red.rds")
 
 sa_salt_gpp_red <- sobolSalt(model = mult_gpp_red, X1_red, X2_red,
                                       scheme="A", nboot = nboot)
-saveRDS(sa_salt_gpp_red, "Rdata/sensitivity/sa_salt_gpp_red.rds")
-print(sa_salt_gpp_red)
-ggplot(sa_salt_gpp_red, choice=1)
+saveRDS(sa_salt_gpp_red, "Rdata/sensitivity/SurEau/sa_salt_gpp_red.rds")
