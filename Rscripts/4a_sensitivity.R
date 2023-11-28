@@ -13,7 +13,7 @@ library(boot)
 # Sensitivity parameters --------------------------------------------------
 n <- 10 #1000 # Number of rows (combinations) in the parameter matrices
 nboot <- 0 #10 # Number of bootstrap samples
-ncores <- 6 #20 # Number of cores
+ncores <- 20 # Number of cores
 model <- "Sperry"
 
 # Terrain -----------------------------------------------------------------
@@ -264,10 +264,10 @@ mult_timetoclosure <- function(X) {
 mult_timetofailure <- function(X) {
   cat(paste0("Entering mult_timetofailure n = ", nrow(X), "\n"))
   doParallel::registerDoParallel(cores = ncores)
-  r <- foreach::foreach(index = 1:nrow(X)) %do% {
+  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
     v <- as.numeric(X[index,])
     names(v) <- names(X)
-    print(v)
+    # print(v)
     of_timetofailure(v, verbose = FALSE)
   }
   doParallel::stopImplicitCluster()
@@ -354,8 +354,8 @@ mult_gpp_red <- function(X) {
   return(r)
 }
 
-mult_timetoclosure(X1[1:ncores,])
-mult_timetofailure(X1[1:ncores,])
+# mult_timetoclosure(X1[1:ncores,])
+# mult_timetofailure(X1[1:ncores,])
 # mult_survivaltime(X1[1:ncores,])
 # mult_gpp(X1[1:ncores,])
 

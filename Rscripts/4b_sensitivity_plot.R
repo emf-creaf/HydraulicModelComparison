@@ -2,28 +2,43 @@ library(tidyverse)
 library(ggplot2)
 library(cowplot)
 
-sa_timetofailure <- readRDS("Rdata/sensitivity/SurEau/sa_salt_timetofailure.rds")
-sa_timetoclosure <- readRDS("Rdata/sensitivity/SurEau/sa_salt_timetoclosure.rds")
-sa_survivaltime <- readRDS("Rdata/sensitivity/SurEau/sa_salt_survivaltime.rds")
-sa_gpp <- readRDS("Rdata/sensitivity/SurEau/sa_salt_gpp.rds")
+model = "Sperry"
 
-sa_timetofailure_red <- readRDS("Rdata/sensitivity/SurEau/sa_salt_timetofailure_red.rds")
-sa_timetoclosure_red <- readRDS("Rdata/sensitivity/SurEau/sa_salt_timetoclosure_red.rds")
-sa_survivaltime_red <- readRDS("Rdata/sensitivity/SurEau/sa_salt_survivaltime_red.rds")
-sa_gpp_red <- readRDS("Rdata/sensitivity/SurEau/sa_salt_gpp_red.rds")
+sa_timetofailure <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetofailure.rds"))
+sa_timetoclosure <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetoclosure.rds"))
+sa_survivaltime <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_survivaltime.rds"))
+sa_gpp <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_gpp.rds"))
 
-parNames = c("TAW",
-             "LAI", 
-             "Z95", 
-             "Plant_kmax", 
-             "Gswmax", 
-             "Vmax298", 
-             "Gs_P50", 
-             "Gswmin", 
-             "VC_P50",
-             "Vsapwood")
-red_exclude <- c(1,2)
-parNames_red <- parNames[-red_exclude]
+sa_timetofailure_red <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetofailure_red.rds"))
+sa_timetoclosure_red <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetoclosure_red.rds"))
+sa_survivaltime_red <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_survivaltime_red.rds"))
+sa_gpp_red <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_gpp_red.rds"))
+
+if(model=="SurEau") {
+  parNames = c("TAW",
+               "LAI", 
+               "Z95", 
+               "Plant_kmax", 
+               "Gswmax", 
+               "Vmax298", 
+               "Gs_P50", 
+               "Gswmin", 
+               "VC_P50",
+               "Vsapwood")
+  red_exclude <- c(1,2)
+  parNames_red <- parNames[-red_exclude]
+} else {
+  parNames = c("TAW",
+               "LAI", 
+               "Z95", 
+               "Plant_kmax", 
+               "Gswmax", 
+               "Vmax298", 
+               "Gswmin", 
+               "VC_d")
+  red_exclude <- c(1,2)
+  parNames_red <- parNames[-red_exclude]
+}
 
 sens_tidy <- function(x, response) {
   data.frame(ParName = parNames, Response = response, Total = x$T$original, FirstOrder = x$S$original) 
@@ -67,7 +82,7 @@ p2<-ggplot(all_df) +
 p<-plot_grid(p1+theme(legend.position = "none"), 
           p2+theme(legend.position = "none"), 
           get_legend(p1), nrow = 1, rel_widths = c(1,1,0.2))
-ggsave2("Plots/Sensitivity_Sureau_all.png", p, width = 12, height= 7, bg = "white")
+ggsave2(paste0("Plots/Sensitivity_", model, "_all.png"), p, width = 12, height= 7, bg = "white")
 
 p3<- ggplot(all_red_df) +
   geom_bar(aes(x = ParName, y = Total, fill = Response), stat ="identity", position="dodge")+
@@ -86,4 +101,4 @@ p4<-ggplot(all_red_df) +
 p<-plot_grid(p3+theme(legend.position = "none"), 
           p4+theme(legend.position = "none"), 
           get_legend(p3), nrow = 1, rel_widths = c(1,1,0.2))
-ggsave2("Plots/Sensitivity_Sureau_red.png", p, width = 12, height= 6, bg = "white")
+ggsave2(paste0("Plots/Sensitivity_", model, "_red.png"), p, width = 12, height= 6, bg = "white")
