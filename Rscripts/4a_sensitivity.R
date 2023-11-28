@@ -2,6 +2,7 @@
 #   Performs sensitivity analysis of time to hidraulic failure and time to stomatal closure in ", model, "-medfate
 ################################################################################################################################
 library(medfate)
+library(meteoland)
 library(sensitivity)
 library(ggplot2)
 library(doParallel)
@@ -149,12 +150,18 @@ sf_timetoclosure<-function(x){
 #First day with PLC > 90% or missing StemPLC, meaning it stoped before
 sf_timetofailure<-function(x){ 
   plc <- as.numeric(x$Plants$StemPLC[,1])
-  # print(plc)
+  na_zero_plc <- (plc==0.0)
+  na_zero_plc[is.na(na_zero_plc)] <- TRUE
+  plc[na_zero_plc] <- NA
+  ttc <- sf_timetoclosure(x)
   na_plc <- which(is.na(plc))[1]
-  n90 <- which(plc > 0.90)[1]
-  n90 <- max(n90, sf_timetoclosure(x)) # Ensure time is not less than stomatal closure
-  if(!is.na(na_plc)) return(min(n90, na_plc))
-  return(n90)
+  n90 <- which(plc[!is.na(plc)] > 0.90)[1]
+  if(!is.na(na_plc)) na_plc <- max(na_plc, ttc) # Ensure time is not less than stomatal closure
+  if(!is.na(n90)) n90 <- max(n90, ttc) # Ensure time is not less than stomatal closure
+  # print(c(na_plc, n90))
+  if(is.na(na_plc)) return(n90)
+  else if(is.na(n90)) return(na_plc)
+  return(min(n90, na_plc))
 }
 # Survival time as the difference
 sf_survivaltime<-function(x){ 
@@ -216,14 +223,14 @@ of_gpp_red<-optimization_function(parNames = parNames_red,
                                            latitude = pue_latitude, elevation = pue_elevation,
                                            slope = pue_slope, aspect = pue_aspect,
                                            summary_function = sf_gpp)
-of_timetoclosure(parMin)
-of_timetoclosure(parMax)
-of_timetofailure(parMin)
-of_timetofailure(parMax)
-of_survivaltime(parMin)
-of_survivaltime(parMax)
-of_gpp(parMin)
-of_gpp(parMax)
+# of_timetoclosure(parMin)
+# of_timetoclosure(parMax)
+# of_timetofailure(parMin)
+# of_timetofailure(parMax)
+# of_survivaltime(parMin)
+# of_survivaltime(parMax)
+# of_gpp(parMin)
+# of_gpp(parMax)
 
 
 # Parameter matrices ------------------------------------------------------
@@ -257,9 +264,10 @@ mult_timetoclosure <- function(X) {
 mult_timetofailure <- function(X) {
   cat(paste0("Entering mult_timetofailure n = ", nrow(X), "\n"))
   doParallel::registerDoParallel(cores = ncores)
-  r <- foreach::foreach(index = 1:nrow(X)) %dopar% {
+  r <- foreach::foreach(index = 1:nrow(X)) %do% {
     v <- as.numeric(X[index,])
     names(v) <- names(X)
+    print(v)
     of_timetofailure(v, verbose = FALSE)
   }
   doParallel::stopImplicitCluster()
@@ -346,8 +354,8 @@ mult_gpp_red <- function(X) {
   return(r)
 }
 
-# mult_timetoclosure(X1[1:ncores,])
-# mult_timetofailure(X1[1:ncores,])
+mult_timetoclosure(X1[1:ncores,])
+mult_timetofailure(X1[1:ncores,])
 # mult_survivaltime(X1[1:ncores,])
 # mult_gpp(X1[1:ncores,])
 
