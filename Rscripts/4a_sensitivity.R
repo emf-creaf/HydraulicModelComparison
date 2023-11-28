@@ -1,5 +1,5 @@
 ################################################################################################################################
-#   Performs sensitivity analysis of time to hidraulic failure and time to stomatal closure in sureau-medfate
+#   Performs sensitivity analysis of time to hidraulic failure and time to stomatal closure in ", model, "-medfate
 ################################################################################################################################
 library(medfate)
 library(sensitivity)
@@ -7,11 +7,13 @@ library(ggplot2)
 library(doParallel)
 library(boot)
 
+# remotes::install_github("emf-creaf/medfate", ref = "devel")
 
 # Sensitivity parameters --------------------------------------------------
-n <- 1000 # Number of rows (combinations) in the parameter matrices
-nboot <- 10 # Number of bootstrap samples
-ncores <- 20 # Number of cores
+n <- 10 #1000 # Number of rows (combinations) in the parameter matrices
+nboot <- 0 #10 # Number of bootstrap samples
+ncores <- 6 #20 # Number of cores
+model <- "Sperry"
 
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
@@ -73,22 +75,36 @@ meteo$WindSpeed <- 2
 meteo$Radiation  <- 30
 meteo$Precipitation <- 0 # To force dessication
 
+
 # Build initial input object ----------------------------------------------
-control <- defaultControl("Cochard")
-control$subdailyResults <- FALSE
-control$cavitationRefillStem <- "none"
-control$cavitationRefillLeaves <- "none"
-control$bareSoilEvaporation <- FALSE
-control$plantCapacitance <- TRUE
-control$cavitationFlux <- TRUE
-control$sapFluidityVariation <- TRUE
-control$leafCuticularTranspiration <- TRUE
-control$stemCuticularTranspiration <- TRUE
-control$rhizosphereOverlap <- "total"
-control$stomatalSubmodel <- "Baldocchi"
-control$sunlitShade <- FALSE
-control$gs_NightFrac <- 0.05
-control$verbose <- FALSE
+if(model=="Sureau") {
+  control <- defaultControl("Cochard")
+  control$subdailyResults <- FALSE
+  control$cavitationRefillStem <- "none"
+  control$cavitationRefillLeaves <- "none"
+  control$bareSoilEvaporation <- FALSE
+  control$plantCapacitance <- TRUE
+  control$cavitationFlux <- TRUE
+  control$sapFluidityVariation <- TRUE
+  control$leafCuticularTranspiration <- TRUE
+  control$stemCuticularTranspiration <- TRUE
+  control$rhizosphereOverlap <- "total"
+  control$stomatalSubmodel <- "Baldocchi"
+  control$sunlitShade <- FALSE
+  control$gs_NightFrac <- 0.05
+  control$verbose <- FALSE
+} else {
+  control <- defaultControl("Sperry")
+  control$subdailyResults <- FALSE
+  control$cavitationRefillStem <- "none"
+  control$cavitationRefillLeaves <- "total"
+  control$leafCavitationEffects <- FALSE
+  control$bareSoilEvaporation <- FALSE
+  control$sapFluidityVariation <- TRUE
+  control$rhizosphereOverlap <- "total"
+  control$sunlitShade <- FALSE
+  control$verbose <- FALSE
+}
 
 x_initial <- forest2spwbInput(forest, soil, SpParamsMED, control)
 x_initial$canopy$Tair <- 29
@@ -99,42 +115,50 @@ x_initial$soil$Temp <- c(32,29,27.71661)
 
 # Test parameter modification ---------------------------------------------
 tarcoh <- "T1_168"
-parNames = c("rfc@2",
-             paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VC_P50", "/Vsapwood")))
+if(model=="Sureau") {
+  parNames = c("rfc@2",
+               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VC_P50", "/Vsapwood")))
+  parMin <- c(10,1, 500, 0.3, 0.1, 20, -4.0, 0.001, -12.0, 1.0)
+  parMax <- c(90,7, 6000, 4.0, 0.5, 100, -0.7, 0.010, -1.0, 30.0)
+} else {
+  parNames = c("rfc@2",
+               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gswmin", "/VC_d")))
+  parMin <- c(10,1, 500, 0.3, 0.1, 20, 0.001, -12.0)
+  parMax <- c(90,7, 6000, 4.0, 0.5, 100, 0.010, -1.0)
+}
 red_exclude <- c(1,2)
-parNames_red <- parNames[-red_exclude]
-
-customParams <- c(10,0.5, 500, 1.0, 0.2, 150, -3, 0.003, -4, 2)
-names(customParams) <- parNames
-
-customParams_red <- customParams[-red_exclude]
-names(customParams_red) <- parNames_red
-
-x_mod <- modifyInputParams(x_initial, customParams)
-
-
-# Optimization functions --------------------------------------------------
-parMin <- c(10,1, 500, 0.3, 0.1, 20, -4.0, 0.001, -12.0, 1.0)
-parMax <- c(90,7, 6000, 4.0, 0.5, 100, -0.7, 0.010, -1.0, 30.0)
 parMin_red <-parMin[-red_exclude]
 parMax_red <-parMax[-red_exclude]
+parNames_red <- parNames[-red_exclude]
 
-# First day with maximum gs < 5% of gsmax in Sunlit leaves
+customParams <- parMin
+names(customParams) <- parNames
+x_mod <- modifyInputParams(x_initial, customParams)
+
+# Optimization functions --------------------------------------------------
+
+# First day with maximum gs < 10% of gs initial in Sunlit leaves
 sf_timetoclosure<-function(x){
   gswmax <- x$SunlitLeaves$GSWMax
   if(all(is.na(gswmax))) return(1)
-  ttc <- which(gswmax < x$spwbInput$paramsTranspiration$Gswmax*0.05)[1] 
+  ttc <- which(gswmax < gswmax[1]*0.1)[1] 
   if(is.na(ttc)) return(length(gswmax))
   return(ttc)
 }
 
-#First day with missing StemPLC, meaning it stoped before
+#First day with PLC > 90% or missing StemPLC, meaning it stoped before
 sf_timetofailure<-function(x){ 
-  which(is.na(x$Plants$StemPLC))[1]
+  plc <- as.numeric(x$Plants$StemPLC[,1])
+  # print(plc)
+  na_plc <- which(is.na(plc))[1]
+  n90 <- which(plc > 0.90)[1]
+  n90 <- max(n90, sf_timetoclosure(x)) # Ensure time is not less than stomatal closure
+  if(!is.na(na_plc)) return(min(n90, na_plc))
+  return(n90)
 }
 # Survival time as the difference
 sf_survivaltime<-function(x){ 
-  sf_timetofailure(x) - sf_timetoclosure(x)
+  max(0, sf_timetofailure(x) - sf_timetoclosure(x))
 }
 
 # Cumulated GPP to death
@@ -192,14 +216,14 @@ of_gpp_red<-optimization_function(parNames = parNames_red,
                                            latitude = pue_latitude, elevation = pue_elevation,
                                            slope = pue_slope, aspect = pue_aspect,
                                            summary_function = sf_gpp)
-# of_timetoclosure(parMin)
-# of_timetoclosure(parMax)
-# of_timetofailure(parMin)
-# of_timetofailure(parMax)
-# of_survivaltime(parMin)
-# of_survivaltime(parMax)
-# of_gpp(parMin)
-# of_gpp(parMax)
+of_timetoclosure(parMin)
+of_timetoclosure(parMax)
+of_timetofailure(parMin)
+of_timetofailure(parMax)
+of_survivaltime(parMin)
+of_survivaltime(parMax)
+of_gpp(parMin)
+of_gpp(parMax)
 
 
 # Parameter matrices ------------------------------------------------------
@@ -332,33 +356,33 @@ mult_gpp_red <- function(X) {
 #FULL
 sa_salt_timetoclosure <- sobolSalt(model = mult_timetoclosure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetoclosure, "Rdata/sensitivity/SurEau/sa_salt_timetoclosure.rds")
+saveRDS(sa_salt_timetoclosure, paste0("Rdata/sensitivity/",model, "/sa_salt_timetoclosure.rds"))
 
 sa_salt_timetofailure <- sobolSalt(model = mult_timetofailure, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetofailure, "Rdata/sensitivity/SurEau/sa_salt_timetofailure.rds")
+saveRDS(sa_salt_timetofailure, paste0("Rdata/sensitivity/", model, "/sa_salt_timetofailure.rds"))
 
 sa_salt_survivaltime <- sobolSalt(model = mult_survivaltime, X1, X2,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_survivaltime, "Rdata/sensitivity/SurEau/sa_salt_survivaltime.rds")
+saveRDS(sa_salt_survivaltime, paste0("Rdata/sensitivity/", model, "/sa_salt_survivaltime.rds"))
 
 sa_salt_gpp <- sobolSalt(model = mult_gpp, X1, X2,
                                   scheme="A", nboot = nboot)
-saveRDS(sa_salt_gpp, "Rdata/sensitivity/SurEau/sa_salt_gpp.rds")
+saveRDS(sa_salt_gpp, paste0("Rdata/sensitivity/", model, "/sa_salt_gpp.rds"))
 
 #REDUCED
 sa_salt_timetoclosure_red <- sobolSalt(model = mult_timetoclosure_red, X1_red, X2_red,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetoclosure_red, "Rdata/sensitivity/SurEau/sa_salt_timetoclosure_red.rds")
+saveRDS(sa_salt_timetoclosure_red, paste0("Rdata/sensitivity/", model, "/sa_salt_timetoclosure_red.rds"))
 
 sa_salt_timetofailure_red <- sobolSalt(model = mult_timetofailure_red, X1_red, X2_red,
                                    scheme="A", nboot = nboot)
-saveRDS(sa_salt_timetofailure_red, "Rdata/sensitivity/SurEau/sa_salt_timetofailure_red.rds")
+saveRDS(sa_salt_timetofailure_red, paste0("Rdata/sensitivity/", model, "/sa_salt_timetofailure_red.rds"))
 
 sa_salt_survivaltime_red <- sobolSalt(model = mult_survivaltime_red, X1_red, X2_red,
                                   scheme="A", nboot = nboot)
-saveRDS(sa_salt_survivaltime_red, "Rdata/sensitivity/SurEau/sa_salt_survivaltime_red.rds")
+saveRDS(sa_salt_survivaltime_red, paste0("Rdata/sensitivity/", model, "/sa_salt_survivaltime_red.rds"))
 
 sa_salt_gpp_red <- sobolSalt(model = mult_gpp_red, X1_red, X2_red,
                                       scheme="A", nboot = nboot)
-saveRDS(sa_salt_gpp_red, "Rdata/sensitivity/SurEau/sa_salt_gpp_red.rds")
+saveRDS(sa_salt_gpp_red, paste0("Rdata/sensitivity/", model, "/sa_salt_gpp_red.rds"))

@@ -8,7 +8,7 @@ data(SpParamsMED)
 # K option 2
 # Use k_plant to estimate k_leaf and max_height to estimate k_stem, 
 # rooting depth to estimate k_root and constant radial root resistance
-K_option <-  1
+K_option <-  2
 buildSpParams <- FALSE
 
 # Terrain -----------------------------------------------------------------
@@ -67,7 +67,7 @@ create_forest <- function(sp_name, height_cm){
 
 # Species parameters ------------------------------------------------------
 
-NewParams <- read_delim("Data/Dataset_GSKplant_ImputedTLP_196Species.csv",
+NewParams <- read_delim("Data/Dataset_GSKplant_Trusted_51Species.csv",
                         escape_double = FALSE, trim_ws = TRUE) |> as.data.frame()
 
 

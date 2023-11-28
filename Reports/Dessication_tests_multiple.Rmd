@@ -17,9 +17,9 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 ```{r, echo = FALSE, include = FALSE}
 SpParams <- read.table(file="../Tables/SpParams.txt", sep="\t", header = TRUE)
-results_sureau <- read.table(file="../Tables/results_sureau_KOPT2.txt", sep="\t", header = TRUE)
-results_sperry <- read.table(file="../Tables/results_sperry_KOPT2.txt", sep="\t", header = TRUE)
-results_sperry_segmented <- read.table(file="../Tables/results_sperry_segmented_KOPT2.txt", sep="\t", header = TRUE)
+results_sureau <- read.table(file="../Tables/results_sureau_KOPT1.txt", sep="\t", header = TRUE)
+results_sperry <- read.table(file="../Tables/results_sperry_KOPT1.txt", sep="\t", header = TRUE)
+results_sperry_segmented <- read.table(file="../Tables/results_sperry_segmented_KOPT1.txt", sep="\t", header = TRUE)
 
 sel1  <- results_sureau$day_failure_leaf>=50
 sel2  <- results_sperry$day_failure_leaf>=50
