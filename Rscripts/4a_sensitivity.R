@@ -11,10 +11,10 @@ library(boot)
 # remotes::install_github("emf-creaf/medfate", ref = "devel")
 
 # Sensitivity parameters --------------------------------------------------
-n <- 10 #1000 # Number of rows (combinations) in the parameter matrices
-nboot <- 0 #10 # Number of bootstrap samples
+n <- 100 #1000 # Number of rows (combinations) in the parameter matrices
+nboot <- 10 #10 # Number of bootstrap samples
 ncores <- 20 # Number of cores
-model <- "Sperry"
+model <- "SurEau"
 
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
@@ -78,7 +78,7 @@ meteo$Precipitation <- 0 # To force dessication
 
 
 # Build initial input object ----------------------------------------------
-if(model=="Sureau") {
+if(model=="SurEau") {
   control <- defaultControl("Cochard")
   control$subdailyResults <- FALSE
   control$cavitationRefillStem <- "none"
@@ -116,14 +116,14 @@ x_initial$soil$Temp <- c(32,29,27.71661)
 
 # Test parameter modification ---------------------------------------------
 tarcoh <- "T1_168"
-if(model=="Sureau") {
+if(model=="SurEau") {
   parNames = c("rfc@2",
-               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gs_P50", "/Gswmin", "/VC_P50", "/Vsapwood")))
+               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298_Jmax298", "/Gs_P50", "/Gswmin", "/VC_P50", "/Vsapwood")))
   parMin <- c(10,1, 500, 0.3, 0.1, 20, -4.0, 0.001, -12.0, 1.0)
   parMax <- c(90,7, 6000, 4.0, 0.5, 100, -0.7, 0.010, -1.0, 30.0)
 } else {
   parNames = c("rfc@2",
-               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298", "/Gswmin", "/VC_d")))
+               paste0(tarcoh,c("/LAI_live", "/Z95", "/Plant_kmax", "/Gswmax", "/Vmax298_Jmax298", "/Gswmin", "/VC_d")))
   parMin <- c(10,1, 500, 0.3, 0.1, 20, 0.001, -12.0)
   parMax <- c(90,7, 6000, 4.0, 0.5, 100, 0.010, -1.0)
 }
@@ -136,12 +136,13 @@ customParams <- parMin
 names(customParams) <- parNames
 x_mod <- modifyInputParams(x_initial, customParams)
 
-# Optimization functions --------------------------------------------------
+# Summary functions --------------------------------------------------
 
 # First day with maximum gs < 10% of gs initial in Sunlit leaves
 sf_timetoclosure<-function(x){
-  gswmax <- x$SunlitLeaves$GSWMax
+  gswmax <- as.numeric(x$SunlitLeaves$GSWMax[,1])
   if(all(is.na(gswmax))) return(1)
+  gswmax<-gswmax[!is.na(gswmax)]
   ttc <- which(gswmax < gswmax[1]*0.1)[1] 
   if(is.na(ttc)) return(length(gswmax))
   return(ttc)
@@ -172,6 +173,18 @@ sf_survivaltime<-function(x){
 sf_gpp<-function(x){
   sum(x$Plants$GrossPhotosynthesis, na.rm=TRUE)
 }
+
+# 
+# S <- spwb(x_initial, meteo = meteo,
+#           latitude = pue_latitude, elevation = pue_elevation,
+#           slope = pue_slope, aspect = pue_aspect)
+# sf_timetoclosure(S)
+# sf_timetofailure(S)
+# sf_survivaltime(S)
+# sf_gpp(S)
+
+# Optimization functions --------------------------------------------------
+
 of_timetoclosure<-optimization_function(parNames = parNames,
                                      x = x_initial,
                                      meteo = meteo,

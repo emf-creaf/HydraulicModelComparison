@@ -2,7 +2,7 @@ library(tidyverse)
 library(ggplot2)
 library(cowplot)
 
-model = "Sperry"
+model = "SurEau"
 
 sa_timetofailure <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetofailure.rds"))
 sa_timetoclosure <- readRDS(paste0("Rdata/sensitivity/", model, "/sa_salt_timetoclosure.rds"))
@@ -20,7 +20,7 @@ if(model=="SurEau") {
                "Z95", 
                "Plant_kmax", 
                "Gswmax", 
-               "Vmax298", 
+               "Vmax298/Jmax298", 
                "Gs_P50", 
                "Gswmin", 
                "VC_P50",
@@ -33,7 +33,7 @@ if(model=="SurEau") {
                "Z95", 
                "Plant_kmax", 
                "Gswmax", 
-               "Vmax298", 
+               "Vmax298/Jmax298", 
                "Gswmin", 
                "VC_d")
   red_exclude <- c(1,2)
