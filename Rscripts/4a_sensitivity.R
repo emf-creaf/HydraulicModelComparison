@@ -11,10 +11,10 @@ library(boot)
 # remotes::install_github("emf-creaf/medfate", ref = "devel")
 
 # Sensitivity parameters --------------------------------------------------
-n <- 100 #1000 # Number of rows (combinations) in the parameter matrices
+n <- 1000 #1000 # Number of rows (combinations) in the parameter matrices
 nboot <- 10 #10 # Number of bootstrap samples
 ncores <- 20 # Number of cores
-model <- "SurEau"
+model <- "Sperry"
 
 # Terrain -----------------------------------------------------------------
 pue_latitude <- 43.74139
