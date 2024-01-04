@@ -82,7 +82,7 @@ p2<-ggplot(all_df) +
 p<-plot_grid(p1+theme(legend.position = "none"), 
           p2+theme(legend.position = "none"), 
           get_legend(p1), nrow = 1, rel_widths = c(1,1,0.2))
-ggsave2(paste0("Plots/Sensitivity_", model, "_all.png"), p, width = 12, height= 7, bg = "white")
+ggsave2(paste0("Plots/Sensitivity_", model, "_all.png"), p, width = 12, height= 5, bg = "white")
 
 p3<- ggplot(all_red_df) +
   geom_bar(aes(x = ParName, y = Total, fill = Response), stat ="identity", position="dodge")+
@@ -101,4 +101,4 @@ p4<-ggplot(all_red_df) +
 p<-plot_grid(p3+theme(legend.position = "none"), 
           p4+theme(legend.position = "none"), 
           get_legend(p3), nrow = 1, rel_widths = c(1,1,0.2))
-ggsave2(paste0("Plots/Sensitivity_", model, "_red.png"), p, width = 12, height= 6, bg = "white")
+ggsave2(paste0("Plots/Sensitivity_", model, "_red.png"), p, width = 12, height= 5, bg = "white")
