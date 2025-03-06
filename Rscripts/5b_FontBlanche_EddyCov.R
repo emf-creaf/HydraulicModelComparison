@@ -65,7 +65,7 @@ EC_FB <- read_csv("Data/FontBlanche/FR-FBn_2016_2022.csv",
 
 
 # Extract subdaily canopy energy balance ----------------------------------
-CEB <- medfate::extractSubdaily(S2p, "CanopyEnergyBalance")|>
+CEB <- medfate:::.extractSubdaily(S2p, "CanopyEnergyBalance")|>
   tibble::as_tibble()
 
 LE_30min <- data.frame(datetime = EC_FB$DateTime, EC = EC_FB$LE_F, PRED = CEB$LEcan)
@@ -117,7 +117,10 @@ stats<- function(observed, predicted) {
   is_mis <- is.na(observed) | is.na(predicted)
   observed <- observed[!is_mis]
   predicted <- predicted[!is_mis]
+  mod <- lm(observed~predicted)
   list(
+    intercept = as.numeric(coefficients(mod)[1]),
+    slope = as.numeric(coefficients(mod)[2]),
     bias = mean(predicted - observed, na.rm=TRUE),
     rmse = sqrt(mean((predicted - observed)^2, na.rm=TRUE)),
     r2 = cor(predicted, observed, use = "complete")^2

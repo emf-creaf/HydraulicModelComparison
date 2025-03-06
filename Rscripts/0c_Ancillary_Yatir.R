@@ -87,7 +87,7 @@ yatir_input <- function(control) {
     medfate:::.updateBelow(x1)
     return(x1)
   }
-  else if(control$transpirationMode =="Cochard"){
+  else if(control$transpirationMode =="Sureau"){
 
     # gCrown0	150
     control$gCrown0 <- 0.150

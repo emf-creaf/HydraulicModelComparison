@@ -26,7 +26,7 @@ fontblanche_forest <- function(){
   fb_forest$treeData$Z95 <- 1000
   fb_forest$treeData$LAI <- species_LAI(fb_forest, SpParamsMED)
   # remove Phillyrea
-  # fb_forest$treeData <- fb_forest$treeData[-1, ]
+  fb_forest$treeData <- fb_forest$treeData[-1, ]
   fb_forest$treeData$LAI <- fb_forest$treeData$LAI*(2.7/sum(fb_forest$treeData$LAI))
   return(fb_forest)
 }
@@ -36,12 +36,12 @@ fontblanche_input <- function(control) {
   fb_forest <- fontblanche_forest()
   fb_soil <- fontblanche_soil()
   
-  pl <- 1
-  ph <- 2
-  qi <- 3
+  # pl <- 1
+  ph <- 1
+  qi <- 2
   
-  k_plant <- rep(0, 3)
-  k_plant[pl] <- 1.0 # 1.55
+  k_plant <- rep(0, 2)
+  # k_plant[pl] <- 1.0 # 1.55
   k_plant[qi] <- 0.8
   k_plant[ph] <- 0.55
   
@@ -53,12 +53,12 @@ fontblanche_input <- function(control) {
     # slope_VC_Leaf	11	30	46
     # P50_VC_Stem	 -6.5	-6.4	 -4.79
     # slope_VC_Stem	11	30	46
-    P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
-    wb <- hydraulics_psi2Weibull(-6.5, P88)
-    x0$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
-    x0$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
-    x0$paramsTranspiration$VCstem_c[pl] <- wb["c"]
-    x0$paramsTranspiration$VCstem_d[pl] <- wb["d"]
+    # P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
+    # wb <- hydraulics_psi2Weibull(-6.5, P88)
+    # x0$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
+    # x0$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
+    # x0$paramsTranspiration$VCstem_c[pl] <- wb["c"]
+    # x0$paramsTranspiration$VCstem_d[pl] <- wb["d"]
     P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
     wb <- hydraulics_psi2Weibull(-6.4, P88)
     x0$paramsTranspiration$VCleaf_c[qi] <- wb["c"]
@@ -72,8 +72,7 @@ fontblanche_input <- function(control) {
     x0$paramsTranspiration$VCstem_c[ph] <- wb["c"]
     x0$paramsTranspiration$VCstem_d[ph] <- wb["d"]
     return(x0)
-  }
-  else if(control$transpirationMode == "Sperry") {
+  } else if(control$transpirationMode == "Sperry") {
     
     #Initialize input
     x1 <- forest2spwbInput(fb_forest, fb_soil, SpParamsMED, control)
@@ -86,14 +85,14 @@ fontblanche_input <- function(control) {
     # slope_VC_Leaf	11	30	46
     # P50_VC_Stem	 -6.5	-6.4	 -4.79
     # slope_VC_Stem	11	30	46
-    P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
-    wb <- hydraulics_psi2Weibull(-6.5, P88)
-    x1$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
-    x1$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
-    x1$paramsTranspiration$VCstem_c[pl] <- wb["c"]
-    x1$paramsTranspiration$VCstem_d[pl] <- wb["d"]
-    x1$paramsTranspiration$VCroot_c[pl] <- wb["c"]
-    x1$paramsTranspiration$VCroot_d[pl] <- wb["d"]
+    # P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
+    # wb <- hydraulics_psi2Weibull(-6.5, P88)
+    # x1$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
+    # x1$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
+    # x1$paramsTranspiration$VCstem_c[pl] <- wb["c"]
+    # x1$paramsTranspiration$VCstem_d[pl] <- wb["d"]
+    # x1$paramsTranspiration$VCroot_c[pl] <- wb["c"]
+    # x1$paramsTranspiration$VCroot_d[pl] <- wb["d"]
     P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
     wb <- hydraulics_psi2Weibull(-6.4, P88)
     x1$paramsTranspiration$VCleaf_c[qi] <- wb["c"]
@@ -115,9 +114,9 @@ fontblanche_input <- function(control) {
     # epsilonSym_Leaf	12.38	12.38	15	5.31	5
     # PiFullTurgor_Leaf	 -2.7	 -2.13	-2.5	 -1.5	-1.65
     # apoFrac_Leaf	0.5	0.5	0.4	0.6	0.6
-    x1$paramsWaterStorage$LeafEPS[pl] <- 12.38 
-    x1$paramsWaterStorage$LeafPI0[pl] <- -2.13
-    x1$paramsWaterStorage$LeafAF[pl] <- 0.5
+    # x1$paramsWaterStorage$LeafEPS[pl] <- 12.38 
+    # x1$paramsWaterStorage$LeafPI0[pl] <- -2.13
+    # x1$paramsWaterStorage$LeafAF[pl] <- 0.5
     x1$paramsWaterStorage$LeafEPS[qi] <- 15 
     x1$paramsWaterStorage$LeafPI0[qi] <- -2.5
     x1$paramsWaterStorage$LeafAF[qi] <- 0.4
@@ -130,9 +129,9 @@ fontblanche_input <- function(control) {
     # epsilonSym_Stem	 -2.7	 -2.13	15	5	5
     # apoFrac_Stem	0.4	0.4	0.4	0.4	0.4
     # symFrac_Stem	0.2	0.2	0.2	0.2	0.2
-    x1$paramsWaterStorage$StemEPS[pl] <- 12.38 
-    x1$paramsWaterStorage$StemPI0[pl] <- -2.13
-    x1$paramsWaterStorage$StemAF[pl] <- 0.4
+    # x1$paramsWaterStorage$StemEPS[pl] <- 12.38 
+    # x1$paramsWaterStorage$StemPI0[pl] <- -2.13
+    # x1$paramsWaterStorage$StemAF[pl] <- 0.4
     x1$paramsWaterStorage$StemEPS[qi] <- 15 
     x1$paramsWaterStorage$StemPI0[qi] <- -2.5
     x1$paramsWaterStorage$StemAF[qi] <- 0.4
@@ -145,7 +144,7 @@ fontblanche_input <- function(control) {
     x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.4)
     x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
     x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
-    for(i in c(pl, qi, ph)) x1$belowLayers$VCroot_kmax[i,] <- x1$belowLayers$VCroot_kmax[i, ]*x1$paramsTranspiration$VCroot_kmax[i]/sum(x1$belowLayers$VCroot_kmax[i, ])
+    for(i in c(qi, ph)) x1$belowLayers$VCroot_kmax[i,] <- x1$belowLayers$VCroot_kmax[i, ]*x1$paramsTranspiration$VCroot_kmax[i]/sum(x1$belowLayers$VCroot_kmax[i, ])
     x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
     x1$paramsTranspiration$FR_leaf <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCleaf_kmax
     x1$paramsTranspiration$FR_stem <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCstem_kmax
@@ -154,17 +153,16 @@ fontblanche_input <- function(control) {
     # P. angustifolia	P.latifolia	Qilex	Phalepensis	Phalepensis_OLD
     # gsMax	150	200	220	217.500963190747	217.500963190747
     # gmin20	1.5	2	2	1	1.5
-    x1$paramsTranspiration$Gswmax[pl] <- 0.220 
+    # x1$paramsTranspiration$Gswmax[pl] <- 0.220 
     x1$paramsTranspiration$Gswmax[qi] <- 0.220 
     x1$paramsTranspiration$Gswmax[ph] <- 0.2175 
-    x1$paramsTranspiration$Gswmin[pl] <- 0.002 
+    # x1$paramsTranspiration$Gswmin[pl] <- 0.002 
     x1$paramsTranspiration$Gswmin[qi] <- 0.002 
     x1$paramsTranspiration$Gswmin[ph] <- 0.001 
     
     medfate:::.updateBelow(x1)
     return(x1)
-  }
-  else if(control$transpirationMode == "Cochard") {
+  } else if(control$transpirationMode == "Sureau") {
     
     control$TPhase_gmin	<- 37.5
     control$Q10_1_gmin <- 1.2
@@ -198,20 +196,20 @@ fontblanche_input <- function(control) {
     # slope_VC_Leaf	11	30	46
     # P50_VC_Stem	 -6.5	-6.4	 -4.79
     # slope_VC_Stem	11	30	46
-    x2$paramsTranspiration$VCleaf_P50[pl] <- -6.5
-    x2$paramsTranspiration$VCleaf_slope[pl] <- 11
-    x2$paramsTranspiration$VCstem_P50[pl] <- -6.5
-    x2$paramsTranspiration$VCstem_slope[pl] <- 11
-    x2$paramsTranspiration$VCroot_P50[pl] <- -6.5
-    x2$paramsTranspiration$VCroot_slope[pl] <- 11
-    P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
-    wb <- hydraulics_psi2Weibull(-6.5, P88)
-    x2$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
-    x2$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
-    x2$paramsTranspiration$VCstem_c[pl] <- wb["c"]
-    x2$paramsTranspiration$VCstem_d[pl] <- wb["d"]
-    x2$paramsTranspiration$VCroot_c[pl] <- wb["c"]
-    x2$paramsTranspiration$VCroot_d[pl] <- wb["d"]
+    # x2$paramsTranspiration$VCleaf_P50[pl] <- -6.5
+    # x2$paramsTranspiration$VCleaf_slope[pl] <- 11
+    # x2$paramsTranspiration$VCstem_P50[pl] <- -6.5
+    # x2$paramsTranspiration$VCstem_slope[pl] <- 11
+    # x2$paramsTranspiration$VCroot_P50[pl] <- -6.5
+    # x2$paramsTranspiration$VCroot_slope[pl] <- 11
+    # P88 <- -6.5 + log((100.0/88.0)-1.0)*(25.0/11)
+    # wb <- hydraulics_psi2Weibull(-6.5, P88)
+    # x2$paramsTranspiration$VCleaf_c[pl] <- wb["c"]
+    # x2$paramsTranspiration$VCleaf_d[pl] <- wb["d"]
+    # x2$paramsTranspiration$VCstem_c[pl] <- wb["c"]
+    # x2$paramsTranspiration$VCstem_d[pl] <- wb["d"]
+    # x2$paramsTranspiration$VCroot_c[pl] <- wb["c"]
+    # x2$paramsTranspiration$VCroot_d[pl] <- wb["d"]
     
     x2$paramsTranspiration$VCleaf_P50[qi] <- -6.4
     x2$paramsTranspiration$VCleaf_slope[qi] <- 30
@@ -247,9 +245,9 @@ fontblanche_input <- function(control) {
     # epsilonSym_Leaf	12.38	12.38	15	5.31	5
     # PiFullTurgor_Leaf	 -2.7	 -2.13	-2.5	 -1.5	-1.65
     # apoFrac_Leaf	0.5	0.5	0.4	0.6	0.6
-    x2$paramsWaterStorage$LeafEPS[pl] <- 12.38 
-    x2$paramsWaterStorage$LeafPI0[pl] <- -2.13
-    x2$paramsWaterStorage$LeafAF[pl] <- 0.5
+    # x2$paramsWaterStorage$LeafEPS[pl] <- 12.38 
+    # x2$paramsWaterStorage$LeafPI0[pl] <- -2.13
+    # x2$paramsWaterStorage$LeafAF[pl] <- 0.5
     x2$paramsWaterStorage$LeafEPS[qi] <- 15 
     x2$paramsWaterStorage$LeafPI0[qi] <- -2.5
     x2$paramsWaterStorage$LeafAF[qi] <- 0.4
@@ -262,9 +260,9 @@ fontblanche_input <- function(control) {
     # epsilonSym_Stem	 -2.7	 -2.13	15	5	5
     # apoFrac_Stem	0.4	0.4	0.4	0.4	0.4
     # symFrac_Stem	0.2	0.2	0.2	0.2	0.2
-    x2$paramsWaterStorage$StemEPS[pl] <- 12.38 
-    x2$paramsWaterStorage$StemPI0[pl] <- -2.13
-    x2$paramsWaterStorage$StemAF[pl] <- 0.4
+    # x2$paramsWaterStorage$StemEPS[pl] <- 12.38 
+    # x2$paramsWaterStorage$StemPI0[pl] <- -2.13
+    # x2$paramsWaterStorage$StemAF[pl] <- 0.4
     x2$paramsWaterStorage$StemEPS[qi] <- 15 
     x2$paramsWaterStorage$StemPI0[qi] <- -2.5
     x2$paramsWaterStorage$StemAF[qi] <- 0.4
@@ -279,7 +277,7 @@ fontblanche_input <- function(control) {
     x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.40)
     x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
     x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
-    for(i in c(pl, qi, ph)) x2$belowLayers$VCroot_kmax[i,] <- x2$belowLayers$VCroot_kmax[i, ]*x2$paramsTranspiration$VCroot_kmax[i]/sum(x2$belowLayers$VCroot_kmax[i, ])
+    for(i in c(qi, ph)) x2$belowLayers$VCroot_kmax[i,] <- x2$belowLayers$VCroot_kmax[i, ]*x2$paramsTranspiration$VCroot_kmax[i]/sum(x2$belowLayers$VCroot_kmax[i, ])
     x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCleaf_kmax + 
                                               1/x2$paramsTranspiration$VCstem_kmax + 
                                               1/x2$paramsTranspiration$VCroot_kmax)
@@ -290,10 +288,10 @@ fontblanche_input <- function(control) {
     # P. angustifolia	P.latifolia	Qilex	Phalepensis	Phalepensis_OLD
     # gsMax	150	200	220	217.500963190747	217.500963190747
     # gmin20	1.5	2	2	1	1.5
-    x2$paramsTranspiration$Gswmax[pl] <- 0.220 
+    # x2$paramsTranspiration$Gswmax[pl] <- 0.220 
     x2$paramsTranspiration$Gswmax[qi] <- 0.220 
     x2$paramsTranspiration$Gswmax[ph] <- 0.2175 
-    x2$paramsTranspiration$Gswmin[pl] <- 0.002 
+    # x2$paramsTranspiration$Gswmin[pl] <- 0.002 
     x2$paramsTranspiration$Gswmin[qi] <- 0.002 
     x2$paramsTranspiration$Gswmin[ph] <- 0.001 
     
@@ -302,8 +300,8 @@ fontblanche_input <- function(control) {
     # P. angustifolia	P.latifolia	Qilex	Phalepensis	Phalepensis_OLD
     # P12_gs	-2.2	 -1.65	-1	-1.36	-1.36
     # P88_gs	-3.8	 -2.5	-2.7	 -2.14	-2.33
-    x2$paramsTranspiration$Gs_slope[pl] <- (88.0 - 12.0)/(2.5 - 1.65);
-    x2$paramsTranspiration$Gs_P50[pl] <- -1.65 + log(0.12/0.88)/(x2$paramsTranspiration$Gs_slope[pl]/25)
+    # x2$paramsTranspiration$Gs_slope[pl] <- (88.0 - 12.0)/(2.5 - 1.65);
+    # x2$paramsTranspiration$Gs_P50[pl] <- -1.65 + log(0.12/0.88)/(x2$paramsTranspiration$Gs_slope[pl]/25)
     x2$paramsTranspiration$Gs_slope[qi] <- (88.0 - 12.0)/(2.7 - 1);
     x2$paramsTranspiration$Gs_P50[qi] <- -1.0 + log(0.12/0.88)/(x2$paramsTranspiration$Gs_slope[qi]/25)
     x2$paramsTranspiration$Gs_slope[ph] <- (88.0 - 12.0)/(2.14 - 1.36);

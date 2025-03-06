@@ -98,7 +98,7 @@ puechabon_input <- function(control) {
     # medfate:::.updateBelow(x1)
     return(x1)
   }
-  else if(control$transpirationMode =="Cochard"){
+  else if(control$transpirationMode =="Sureau"){
     control$TPhase_gmin	<- 37.5
     control$Q10_1_gmin <- 1.2
     control$Q10_2_gmin <- 4.8

@@ -6,7 +6,7 @@ library(tidyverse)
 library(cowplot)
 
 source("Rscripts/0b_Ancillary_FontBlanche.R")
-
+source("Rscripts/0_ExtractParams.R")
 
 # Terrain -----------------------------------------------------------------
 fb_latitude <- 43.24
@@ -40,8 +40,8 @@ fb_meteo <- read_delim("Data/FontBlanche/Climate_FontBlanche_GapFilled.csv",
 #Initialize control parameters
 control <- defaultControl("Sperry")
 control$subdailyResults <- TRUE
-control$cavitationRefillStem <- "annual"
-control$cavitationRefillLeaves <- "annual"
+control$stemCavitationRecovery <- "annual"
+control$leafCavitationRecovery <- "annual"
 control$leafCavitationEffects <- TRUE
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
@@ -49,30 +49,28 @@ control$leafCavitationEffects <- FALSE
 control$sunlitShade <- FALSE
 
 ## Total overlap
-control$rhizosphereOverlap <- "total"
-x1t <- fontblanche_input(control)
-S1t <- spwb(x1t, fb_meteo,
+control$rhizosphereOverlap <- "none"
+x1 <- fontblanche_input(control)
+S1 <- spwb(x1, fb_meteo,
             latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
-saveRDS(S1t, "Rdata/FontBlanche/Real_FontBlanche_Sperry_onepool.rds")
+saveRDS(S1, "Rdata/FontBlanche/Real_FontBlanche_Sperry.rds")
 
 
 ## Partial overlap
-control$rhizosphereOverlap <- "partial"
-x1p <- fontblanche_input(control)
-S1p <- spwb(x1p, fb_meteo, 
-            latitude = fb_latitude, elevation = fb_elevation,
-            slope = fb_slope, aspect = fb_aspect)
-saveRDS(S1p, "Rdata/FontBlanche/Real_FontBlanche_Sperry_partialpools.rds")
-
-
+# control$rhizosphereOverlap <- "partial"
+# x1p <- fontblanche_input(control)
+# S1p <- spwb(x1p, fb_meteo, 
+#             latitude = fb_latitude, elevation = fb_elevation,
+#             slope = fb_slope, aspect = fb_aspect)
+# saveRDS(S1p, "Rdata/FontBlanche/Real_FontBlanche_Sperry_partialpools.rds")
 
 # Cochard initialization and run ----------------------------------------------------------
 #Initialize control parameters
-control <- defaultControl("Cochard")
+control <- defaultControl("Sureau")
 control$subdailyResults <- TRUE
-control$cavitationRefillStem <- "none"
-control$cavitationRefillLeaves <- "none"
+control$stemCavitationRecovery <- "none"
+control$leafCavitationRecovery <- "none"
 control$bareSoilEvaporation <- FALSE
 control$plantCapacitance <- TRUE
 control$cavitationFlux <- FALSE
@@ -82,14 +80,12 @@ control$stemCuticularTranspiration <- FALSE
 control$sunlitShade <- FALSE
 control$gs_NightFrac <- 0.001
 control$stomatalSubmodel <- "Baldocchi"
-
-## Total overlap
-control$rhizosphereOverlap <- "total"
-x2t <- fontblanche_input(control)
-S2t <- spwb(x2t, fb_meteo, 
+control$rhizosphereOverlap <- "none"
+x2b <- fontblanche_input(control)
+S2b <- spwb(x2b, fb_meteo, 
             latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
-saveRDS(S2t, "Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_onepool.rds")
+saveRDS(S2b, "Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_no_overlap.rds")
 
 
 ## Partial overlap
@@ -98,21 +94,174 @@ x2p <- fontblanche_input(control)
 S2p <- spwb(x2p, fb_meteo, 
             latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
-saveRDS(S2p, "Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_partialpools.rds")
+saveRDS(S2p, "Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_partial_overlap.rds")
 
-
-control$rhizosphereOverlap <- "total"
-control$soilDisconnection <- TRUE
-x2s <- fontblanche_input(control)
-#Change canopy and soil variables
-x2s$canopy$Tair <- 29
-x2s$canopy$Cair <- 386
-x2s$canopy$VPair <- 1.688
-x2s$soil$Temp <- c(32,29,27.71661)
-
-S2s <- spwb(x2s, fb_meteo,
-            latitude = fb_latitude, elevation = fb_elevation,
+# Sperry (segmented) ------------------------------------------------------
+x1s <- x1
+x1s$control$rhizosphereOverlap <- "none"
+x1s$control$leafCavitationRecovery <- "total"
+x1s$control$leafCavitationEffects <- FALSE
+# gs_psi50 <- x2b$paramsTranspiration$Gs_P50
+# gs_slope <- x2b$paramsTranspiration$Gs_slope
+# gs_psi88 <- gs_psi50 + log((1/0.88)-1.0)*(25.0/gs_slope)
+# From Limousin et al. (2022)
+# Quercus ilex Kleaf P50 = -5 o -4.5 P88 = -6.5 o -5.5
+# P. halepensis P50 = -2 P88 = -2.2
+wb_1 <- hydraulics_psi2Weibull(psi50 = -2.0, psi88 = -2.2)
+wb_2 <- hydraulics_psi2Weibull(psi50 = -4.5, psi88 = -5.5)
+x1s$paramsTranspiration$VCleaf_c <- c(wb_1["c"], wb_2["c"]) 
+x1s$paramsTranspiration$VCleaf_d <- c(wb_1["d"], wb_2["d"])
+# Bartlett et al. (2016)
+# Root P50 = 0.4892 + 0.742 * Stem_P50
+root_P50 <- 0.4892 + 0.742*x2b$paramsTranspiration$VCstem_P50
+# P88,stem=−1.4264+1.2593* P50,stem
+root_P88 <- -1.4264 + 1.2593*root_P50
+wb_1 <- hydraulics_psi2Weibull(psi50 = root_P50[1], psi88 = root_P88[1])
+wb_2 <- hydraulics_psi2Weibull(psi50 = root_P50[2], psi88 = root_P88[2])
+x1s$paramsTranspiration$VCroot_c <- c(wb_1["c"], wb_2["c"]) 
+x1s$paramsTranspiration$VCroot_d <- c(wb_1["d"], wb_2["d"])
+medfate:::.updateBelow(x1s)
+S1s <- spwb(x1s, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
             slope = fb_slope, aspect = fb_aspect)
-saveRDS(S2s, "Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_disconnection.rds")
+saveRDS(S1s, "Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented.rds")
 
+
+# Plots -------------------------------------------------------------------
+library(medfate)
+library(cowplot)
+library(ggplot2)
+Sys.setlocale("LC_ALL", "en_US.utf8")
+S1 <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry.rds")
+S1s <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented.rds")
+S2b <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_no_overlap.rds")
+
+p1 <- plot(S1, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry")+theme(legend.position = c(0.8,0.8))
+p2 <- plot(S1s, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
+p3 <- plot(S2b, "SoilPsi")+ylim(c(-7,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/SoilPsi_FontBlanche_Real.png", p, width = 8, height = 11)
+
+p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
+p2 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/HydraulicRedistribution_FontBlanche_Real.png", p, width = 8, height = 11)
+
+p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry")
+p2 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/LeafPsiRange_FontBlanche_Real.png", p, width = 8, height = 11)
+
+p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry")
+p2 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/Transpiration_FontBlanche_Real.png", p, width = 8, height = 11)
+
+
+p1 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry")
+p2 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/StomatalConductance_FontBlanche_Real.png", p, width = 8, height = 11)
+
+
+p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry")
+p2 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/StemPLC_FontBlanche_Real.png", p, width = 8, height = 11)
+
+
+p1 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
+p2 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/LeafPLC_FontBlanche_Real.png", p, width = 8, height = 11)
+
+p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
+p2 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/SoilPlantConductance_FontBlanche_Real.png", p, width = 8, height = 11)
+
+
+p1 <- plot(S1, "RootPsi", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry")
+p2 <- plot(S1s, "RootPsi", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")
+p3 <- plot(S2b, "RootPsi", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = c(0.15,0.8))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/RootPsi_FontBlanche_Real.png", p, width = 8, height = 11)
+
+pot_20170620 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170620.txt", skip = 11) 
+pot_20170712 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170712.txt", skip = 11) 
+pot_20170830 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170830.txt", skip = 11) 
+
+extract_wp <- function(x, date) {
+  pot_pine <- x |>
+    dplyr::filter(is.na(remarques), parcelle=="TD") |>
+    dplyr::mutate(sp = substr(arbre,1,1)) |>
+    dplyr::filter(sp == "p") |>
+    dplyr::summarise(PD_T1_148 = mean(Pb), PD_T1_148_err = sqrt(var(Pb)),
+                     MD_T1_148 = mean(Pm), MD_T1_148_err = sqrt(var(Pm))) 
+  pot_oak <- x |>
+    dplyr::filter(is.na(remarques), parcelle=="TD") |>
+    dplyr::mutate(sp = substr(arbre,1,1)) |>
+    dplyr::filter(sp == "c") |>
+    dplyr::summarise(PD_T2_168 = mean(Pb), PD_T2_168_err = sqrt(var(Pb)),
+                     MD_T2_168 = mean(Pm), MD_T2_168_err = sqrt(var(Pm))) 
+  pot <- dplyr::bind_cols(pot_pine, pot_oak)|>
+    dplyr::mutate(dates = as.Date(date))
+  return(pot)
+}
+wp_data <- bind_rows(extract_wp(pot_20170620, "2017-06-20"),
+                     extract_wp(pot_20170712, "2017-07-12"),
+                     extract_wp(pot_20170830, "2017-08-30")) |>
+  as.data.frame()
+row.names(wp_data) <- as.character(wp_data$dates)
+
+FR_FBn_VG_Sap_Flow_3_L2C <- read_delim("Data/FontBlanche/FR-FBn_VG_Sap_Flow_3_L2C.csv", 
+                                       delim = ";", escape_double = FALSE, trim_ws = TRUE,
+                                       na = c("-9999"))
+
+E_data <- FR_FBn_VG_Sap_Flow_3_L2C |>
+  dplyr::select(TIMESTAMP, SAP_FLOW_TD_P, SAP_FLOW_TD_C) |>
+  dplyr::rename(dates = TIMESTAMP,
+                E_T1_148 = SAP_FLOW_TD_P, 
+                E_T2_168 = SAP_FLOW_TD_C)|>
+  dplyr::mutate(dates = as.Date(dates, format = "%d/%m/%Y"))|>
+  as.data.frame()
+E_data$E_T1_148[E_data$E_T1_148==-9999] <- NA
+E_data$E_T2_168[E_data$E_T2_168==-9999] <- NA
+lai <- x1$above$LAI_live
+E_data$E_T1_148 <- E_data$E_T1_148/lai[1]
+E_data$E_T2_168 <- E_data$E_T2_168/lai[2]
+row.names(E_data) <- as.character(E_data$dates)
+
+
+wp_evaluation <- function(S, wp_data, E_data, title) {
+  p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,2))+
+    labs(title = title, subtitle = "Sap flux Pinus halepensis")+
+    theme_classic()+theme(legend.position = c(0.8,0.8))
+  p2 <- evaluation_plot(S, E_data, type="E", cohort = "T2_168")+ ylim(c(0,2))+
+    labs(title = "", subtitle = "Sap flux Quercus ilex")+
+    theme_classic()+theme(legend.position = "none")
+  p3<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-6.5,0))+
+    theme_classic()+theme(legend.position = c(0.2,0.2)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
+  p4<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-10,0))+
+    labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position = "none")
+  p5 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
+    theme_classic()+ theme(legend.position = c(0.2,0.9))+labs(title=title, subtitle="PLC")
+  return(cowplot::plot_grid(p1, p2, p3, p4, p5, ncol = 5, rel_widths = c(1,1,1,1,1.3)))  
+}
+p1 <-wp_evaluation(S1, wp_data, E_data, "Sperry non-segmented")
+p2 <-wp_evaluation(S1s, wp_data, E_data, "Sperry segmented")
+p3 <-wp_evaluation(S2b, wp_data, E_data, "Sureau")
+p <-plot_grid(p1, p2, p3, nrow = 3)
+ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real.png", p, width = 20, height = 10, bg = "white")
+
+extract_spparams(x1)
+extract_spparams(x1s)
+extract_spparams(x2b)
 
