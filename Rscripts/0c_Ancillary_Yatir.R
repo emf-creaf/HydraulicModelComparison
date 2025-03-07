@@ -34,7 +34,13 @@ yatir_input <- function(control) {
   yat_forest <- yatir_forest()
   yat_soil <- yatir_soil()
   
-  k_plant <- 0.55
+  k_plant <- 0.35
+  
+  rf_leaf <- 0.40
+  rf_leaf_apo <- 0.15
+  rf_leaf_symp <- 0.25
+  rf_stem <- 0.30
+  rf_root <- 0.30
 
   P50 <- -4.79
   slope <- 46
@@ -75,9 +81,11 @@ yatir_input <- function(control) {
     x1$paramsTranspiration$Gswmax <- 0.2175  # 0.2175
     
     # Conductances
-    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.4)
-    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
-    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x1$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x1$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
     x1$belowLayers$VCroot_kmax <- x1$belowLayers$VCroot_kmax*x1$paramsTranspiration$VCroot_kmax/sum(x1$belowLayers$VCroot_kmax)
     x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
     x1$paramsTranspiration$FR_leaf <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCleaf_kmax
@@ -143,11 +151,11 @@ yatir_input <- function(control) {
     x2$paramsTranspiration$VCroot_d <- x2$paramsTranspiration$VCleaf_d
     # Conductances
     # resistances 20% leaf symp / 20% leaf apo / 30% stem / 30% root
-    x2$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*0.20)
-    x2$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*0.20)
-    x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.40)
-    x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
-    x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x2$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x2$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
     x2$belowLayers$VCroot_kmax <- x2$belowLayers$VCroot_kmax*x2$paramsTranspiration$VCroot_kmax/sum(x2$belowLayers$VCroot_kmax)
     x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCleaf_kmax + 
                                               1/x2$paramsTranspiration$VCstem_kmax + 

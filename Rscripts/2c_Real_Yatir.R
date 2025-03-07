@@ -107,6 +107,21 @@ S1s <- spwb(x1s, yat_meteo,
            slope = yat_slope, aspect = yat_aspect)
 saveRDS(S1s, "Rdata/Yatir/Real_Yatir_Sperry_segmented.rds")
 
+# Sperry segmented (TLP) --------------------------------------------------
+x1st <- x1s
+wb <- hydraulics_psi2Weibull(psi50 = -2.7, psi88 = -1.4264 + 1.2593*-2.7)
+x1st$paramsTranspiration$VCleaf_c <- wb["c"]
+x1st$paramsTranspiration$VCleaf_d <- wb["d"]
+medfate:::.updateBelow(x1st)
+
+S1st <- spwb(x1st, yat_meteo, 
+            latitude = yat_latitude, elevation = yat_elevation, 
+            slope = yat_slope, aspect = yat_aspect)
+saveRDS(S1st, "Rdata/Yatir/Real_Yatir_Sperry_segmented_TLP.rds")
+
+extract_spparams(x1)
+extract_spparams(x1s)
+extract_spparams(x2b)
 
 # Plots -------------------------------------------------------------------
 library(ggplot2)
@@ -114,62 +129,68 @@ library(cowplot)
 Sys.setlocale("LC_ALL", "en_US.utf8")
 S1 <- readRDS("Rdata/Yatir/Real_Yatir_Sperry.rds")
 S1s <- readRDS("Rdata/Yatir/Real_Yatir_Sperry_segmented.rds")
+S1st <- readRDS("Rdata/Yatir/Real_Yatir_Sperry_segmented_TLP.rds")
 S2b <- readRDS("Rdata/Yatir/Real_Yatir_Sureau_Baldocchi.rds")
 
 p1 <- plot(S1, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry")+theme(legend.position = c(0.8,0.8))
 p2 <- plot(S1s, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
-p3 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1s, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented-tlp")+theme(legend.position = c(0.8,0.8))
+p4 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/SoilPsi_Yatir_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry")
 p2 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/HydraulicRedistribution_Yatir_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-7,0))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/LeafPsiRange_Yatir_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/Transpiration_Yatir_Real.png", p, width = 8, height = 11)
-
 
 p1 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/StomatalConductance_Yatir_Real.png", p, width = 8, height = 11)
-
 
 p1 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/StemPLC_Yatir_Real.png", p, width = 8, height = 11)
-
 
 p1 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/LeafPLC_Yatir_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry")
 p2 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p3 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
+p3 <- plot(S1st, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented-tlp")
+p4 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/Yatir_Real/SoilPlantConductance_Yatir_Real.png", p, width = 8, height = 11)
 
 
 wp_evaluation <- function(S,title) {
-  p1 <- plot(S, "Transpiration", bySpecies = TRUE)+ylim(c(0,1.5))+
+  p1 <- plot(S, "Transpiration", bySpecies = TRUE)+ylim(c(0,1.0))+
     labs(title = title, subtitle = "Transpiration Pinus halepensis")+
     theme_classic()+theme(legend.position = "none")
   p2<- plot(S, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-6.5,0))+
@@ -181,8 +202,9 @@ wp_evaluation <- function(S,title) {
   return(cowplot::plot_grid(p1, p2, p3, ncol = 3, rel_widths = c(2,2,1.3)))  
 }
 p1 <-wp_evaluation(S1, "Sperry non-segmented")
-p2 <-wp_evaluation(S1s,"Sperry segmented")
-p3 <-wp_evaluation(S2b,"Sureau")
-p <-plot_grid(p1, p2, p3, nrow = 3)
-ggsave2("Plots/Yatir_Real/Evaluation_Yatir_Real.png", p, width = 20, height = 10, bg = "white")
+p2 <-wp_evaluation(S1s,"Sperry segmented (Kleaf)")
+p3 <-wp_evaluation(S1st,"Sperry segmented (TLP)")
+p4 <-wp_evaluation(S2b,"Sureau")
+p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+ggsave2("Plots/Yatir_Real/Evaluation_Yatir_Real.png", p, width = 20, height = 12, bg = "white")
 

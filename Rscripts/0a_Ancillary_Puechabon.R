@@ -35,17 +35,27 @@ puechabon_input <- function(control) {
   pue_soil <- puechabon_soil()
   
   k_plant = 0.8
-  k_RSApo1 <- 0.364
-  k_RSApo2 <- 0.903
-  k_RSApo3 <- 0.732
-  k_RSApo <- k_RSApo1 + k_RSApo2 + k_RSApo3
-  k_SLApo <- 4
-  k_LSym <- 2
-  k_SL <- 1/(1/k_SLApo + 1/k_LSym)
-
-  P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
-  wb <- hydraulics_psi2Weibull(-6.4, P88)
   
+  rf_leaf <- 0.60
+  rf_leaf_apo <- 0.20
+  rf_leaf_symp <- 0.40
+  rf_stem <- 0.25
+  rf_root <- 0.15
+  
+  # 
+  # k_RSApo1 <- 0.364
+  # k_RSApo2 <- 0.903
+  # k_RSApo3 <- 0.732
+  # k_RSApo <- k_RSApo1 + k_RSApo2 + k_RSApo3
+  # k_SLApo <- 4
+  # k_LSym <- 2
+  # k_SL <- 1/(1/k_SLApo + 1/k_LSym)
+
+  P50 <- -6.4
+  slope <- 30
+  P88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
+  wb <- hydraulics_psi2Weibull(P50, P88)
+    
   if(control$transpirationMode == "Granier") {
     x0 <- forest2spwbInput(pue_forest, pue_soil, SpParamsMED, control)
     x0$paramsTranspiration$VCstem_c <- wb["c"]
@@ -65,12 +75,17 @@ puechabon_input <- function(control) {
     # slope_VC_Leaf	30
     # wbl <- hydraulics_psi2Weibull(-4.5, -5.5)
     # wbl <- hydraulics_psi2Weibull(-3.5, -4.5)
-    wbl <- wb
-    x1$paramsTranspiration$VCleaf_c <- wbl["c"]
+    x1$paramsTranspiration$VCleaf_P50 <- P50
+    x1$paramsTranspiration$VCleaf_slope <- slope
+    x1$paramsTranspiration$VCleaf_c <- wb["c"]
+    x1$paramsTranspiration$VCleaf_d <- wb["d"]
+    x1$paramsTranspiration$VCstem_P50 <- P50
+    x1$paramsTranspiration$VCstem_slope <- slope
     x1$paramsTranspiration$VCstem_c <- wb["c"]
-    x1$paramsTranspiration$VCroot_c <- wb["c"]
-    x1$paramsTranspiration$VCleaf_d <- wbl["d"]
     x1$paramsTranspiration$VCstem_d <- wb["d"]
+    x1$paramsTranspiration$VCroot_P50 <- P50
+    x1$paramsTranspiration$VCroot_slope <- slope
+    x1$paramsTranspiration$VCroot_c <- wb["c"]
     x1$paramsTranspiration$VCroot_d <- wb["d"]
     # gmin20	2
     # gmin_S	2
@@ -79,22 +94,17 @@ puechabon_input <- function(control) {
     x1$paramsTranspiration$Gswmax <- 0.220  # 0.220
     
     # Conductances
-    x1$paramsTranspiration$VCleafapo_kmax <- k_SLApo 
-    x1$paramsTranspiration$VCleaf_kmax <- k_SL
-    x1$paramsTranspiration$kleaf_symp <- k_LSym
-    rs_stem <- (1/x1$paramsTranspiration$VCstem_kmax)
-    rs_root <- (1/x1$paramsTranspiration$VCroot_kmax)
-    rs_stem_new <- (1/k_RSApo)*(rs_stem/(rs_stem+rs_root))
-    rs_root_new <- (1/k_RSApo)*(rs_root/(rs_stem+rs_root))
-    sum(rs_stem_new+rs_root_new)
-    x1$paramsTranspiration$VCstem_kmax <- 1/rs_stem_new
-    x1$paramsTranspiration$VCroot_kmax <- 1/rs_root_new
-    1/(1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
-    x1$belowLayers$VCroot_kmax <- x1$belowLayers$VCroot_kmax*(rs_root/rs_root_new)
+    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x1$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x1$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
+    x1$belowLayers$VCroot_kmax[1,] <- x1$belowLayers$VCroot_kmax[1, ]*x1$paramsTranspiration$VCroot_kmax[1]/sum(x1$belowLayers$VCroot_kmax[1, ])
     x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
     x1$paramsTranspiration$FR_leaf <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCleaf_kmax
     x1$paramsTranspiration$FR_stem <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCstem_kmax
     x1$paramsTranspiration$FR_root <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCroot_kmax
+
     # medfate:::.updateBelow(x1)
     return(x1)
   }
@@ -156,21 +166,13 @@ puechabon_input <- function(control) {
     x2$paramsTranspiration$VCstem_d <- x2$paramsTranspiration$VCleaf_d
     x2$paramsTranspiration$VCroot_d <- x2$paramsTranspiration$VCleaf_d
     # Conductances
-    x2$paramsTranspiration$VCleafapo_kmax <- k_SLApo 
-    x2$paramsTranspiration$VCleaf_kmax <- k_SL
-    x2$paramsTranspiration$kleaf_symp <- k_LSym
-    rs_stem <- (1/x2$paramsTranspiration$VCstem_kmax)
-    rs_root <- (1/x2$paramsTranspiration$VCroot_kmax)
-    rs_stem_new <- (1/k_RSApo)*(rs_stem/(rs_stem+rs_root))
-    rs_root_new <- (1/k_RSApo)*(rs_root/(rs_stem+rs_root))
-    sum(rs_stem_new+rs_root_new)
-    x2$paramsTranspiration$VCstem_kmax <- 1/rs_stem_new
-    x2$paramsTranspiration$VCroot_kmax <- 1/rs_root_new
-    1/(1/x2$paramsTranspiration$VCstem_kmax + 1/x2$paramsTranspiration$VCroot_kmax)
-    x2$belowLayers$VCroot_kmax <- x2$belowLayers$VCroot_kmax*(rs_root/rs_root_new)
-    x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCleaf_kmax + 
-                                            1/x2$paramsTranspiration$VCstem_kmax + 
-                                            1/x2$paramsTranspiration$VCroot_kmax)
+    x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x2$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x2$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
+    x2$belowLayers$VCroot_kmax[1,] <- x2$belowLayers$VCroot_kmax[1, ]*x2$paramsTranspiration$VCroot_kmax[1]/sum(x2$belowLayers$VCroot_kmax[1, ])
+    x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCleaf_kmax + 1/x2$paramsTranspiration$VCstem_kmax + 1/x2$paramsTranspiration$VCroot_kmax)
     x2$paramsTranspiration$FR_leaf <- x2$paramsTranspiration$Plant_kmax/x2$paramsTranspiration$VCleaf_kmax
     x2$paramsTranspiration$FR_stem <- x2$paramsTranspiration$Plant_kmax/x2$paramsTranspiration$VCstem_kmax
     x2$paramsTranspiration$FR_root <- x2$paramsTranspiration$Plant_kmax/x2$paramsTranspiration$VCroot_kmax

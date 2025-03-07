@@ -22,11 +22,11 @@ fontblanche_soil <- function(){
 fontblanche_forest <- function(){
   fb_forest <- emptyforest()
   fb_forest$treeData <- read.table("Data/FontBlanche/FONBLA_treeData.txt", sep="\t", header = TRUE)
-  fb_forest$treeData$Z50 <- 200
-  fb_forest$treeData$Z95 <- 1000
   fb_forest$treeData$LAI <- species_LAI(fb_forest, SpParamsMED)
   # remove Phillyrea
   fb_forest$treeData <- fb_forest$treeData[-1, ]
+  fb_forest$treeData$Z50 <- c(200, 200)
+  fb_forest$treeData$Z95 <- c(1000, 1000)
   fb_forest$treeData$LAI <- fb_forest$treeData$LAI*(2.7/sum(fb_forest$treeData$LAI))
   return(fb_forest)
 }
@@ -40,10 +40,13 @@ fontblanche_input <- function(control) {
   ph <- 1
   qi <- 2
   
-  k_plant <- rep(0, 2)
-  # k_plant[pl] <- 1.0 # 1.55
-  k_plant[qi] <- 0.8
-  k_plant[ph] <- 0.55
+  k_plant <- c(0.35, 0.8)
+
+  rf_leaf <- c(0.40, 0.60)
+  rf_leaf_apo <- c(0.15, 0.20)
+  rf_leaf_symp <- c(0.25, 0.40)
+  rf_stem <- c(0.30, 0.25)
+  rf_root <- c(0.30, 0.15)
   
   if(control$transpirationMode == "Granier") {
     x0 <- forest2spwbInput(fb_forest, fb_soil, SpParamsMED, control)
@@ -95,18 +98,30 @@ fontblanche_input <- function(control) {
     # x1$paramsTranspiration$VCroot_d[pl] <- wb["d"]
     P88 <- -6.4 + log((100.0/88.0)-1.0)*(25.0/30)
     wb <- hydraulics_psi2Weibull(-6.4, P88)
+    x1$paramsTranspiration$VCleaf_P50[qi] <- -6.4
+    x1$paramsTranspiration$VCleaf_slope[qi] <- 30
     x1$paramsTranspiration$VCleaf_c[qi] <- wb["c"]
     x1$paramsTranspiration$VCleaf_d[qi] <- wb["d"]
+    x1$paramsTranspiration$VCstem_P50[qi] <- -6.4
+    x1$paramsTranspiration$VCstem_slope[qi] <- 30
     x1$paramsTranspiration$VCstem_c[qi] <- wb["c"]
     x1$paramsTranspiration$VCstem_d[qi] <- wb["d"]
+    x1$paramsTranspiration$VCroot_P50[qi] <- -6.4
+    x1$paramsTranspiration$VCroot_slope[qi] <- 30
     x1$paramsTranspiration$VCroot_c[qi] <- wb["c"]
     x1$paramsTranspiration$VCroot_d[qi] <- wb["d"]
     P88 <- -4.79 + log((100.0/88.0)-1.0)*(25.0/46)
     wb <- hydraulics_psi2Weibull(-4.79, P88)
+    x1$paramsTranspiration$VCleaf_P50[ph] <- -4.79
+    x1$paramsTranspiration$VCleaf_slope[ph] <- 46
     x1$paramsTranspiration$VCleaf_c[ph] <- wb["c"]
     x1$paramsTranspiration$VCleaf_d[ph] <- wb["d"]
+    x1$paramsTranspiration$VCstem_P50[ph] <- -4.79
+    x1$paramsTranspiration$VCstem_slope[ph] <- 46
     x1$paramsTranspiration$VCstem_c[ph] <- wb["c"]
     x1$paramsTranspiration$VCstem_d[ph] <- wb["d"]
+    x1$paramsTranspiration$VCroot_P50[ph] <- -4.79
+    x1$paramsTranspiration$VCroot_slope[ph] <- 46
     x1$paramsTranspiration$VCroot_c[ph] <- wb["c"]
     x1$paramsTranspiration$VCroot_d[ph] <- wb["d"]
     
@@ -140,10 +155,11 @@ fontblanche_input <- function(control) {
     x1$paramsWaterStorage$StemAF[ph] <- 0.4
     
     # Conductances
-    # resistances 40% leaf / 30% stem / 30% root
-    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.4)
-    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
-    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x1$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x1$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x1$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x1$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x1$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
     for(i in c(qi, ph)) x1$belowLayers$VCroot_kmax[i,] <- x1$belowLayers$VCroot_kmax[i, ]*x1$paramsTranspiration$VCroot_kmax[i]/sum(x1$belowLayers$VCroot_kmax[i, ])
     x1$paramsTranspiration$Plant_kmax <- 1/(1/x1$paramsTranspiration$VCleaf_kmax + 1/x1$paramsTranspiration$VCstem_kmax + 1/x1$paramsTranspiration$VCroot_kmax)
     x1$paramsTranspiration$FR_leaf <- x1$paramsTranspiration$Plant_kmax/x1$paramsTranspiration$VCleaf_kmax
@@ -271,12 +287,11 @@ fontblanche_input <- function(control) {
     x2$paramsWaterStorage$StemAF[ph] <- 0.4
     
     # Conductances
-    # resistances 20% leaf symp / 20% leaf apo / 30% stem / 30% root
-    x2$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*0.20)
-    x2$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*0.20)
-    x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*0.40)
-    x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*0.3)
-    x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*0.3)
+    x2$paramsTranspiration$kleaf_symp <- 1.0/((1.0/k_plant)*rf_leaf_symp)
+    x2$paramsTranspiration$VCleafapo_kmax <- 1.0/((1.0/k_plant)*rf_leaf_apo)
+    x2$paramsTranspiration$VCleaf_kmax <- 1.0/((1.0/k_plant)*rf_leaf)
+    x2$paramsTranspiration$VCstem_kmax <- 1.0/((1.0/k_plant)*rf_stem)
+    x2$paramsTranspiration$VCroot_kmax <- 1.0/((1.0/k_plant)*rf_root)
     for(i in c(qi, ph)) x2$belowLayers$VCroot_kmax[i,] <- x2$belowLayers$VCroot_kmax[i, ]*x2$paramsTranspiration$VCroot_kmax[i]/sum(x2$belowLayers$VCroot_kmax[i, ])
     x2$paramsTranspiration$Plant_kmax <- 1/(1/x2$paramsTranspiration$VCleaf_kmax + 
                                               1/x2$paramsTranspiration$VCstem_kmax + 
