@@ -42,7 +42,7 @@ control <- defaultControl("Sperry")
 control$subdailyResults <- TRUE
 control$stemCavitationRecovery <- "annual"
 control$leafCavitationRecovery <- "annual"
-control$leafCavitationEffects <- TRUE
+control$leafCavitationEffects <- FALSE
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- FALSE
@@ -241,10 +241,9 @@ g <- ga(type = "real-valued",
         maxiter = 20,
         optim = FALSE,
         keepBest = TRUE)
-# g <- optim(c(-2.0,40), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(reltol = 0.001)) # opt = c(-2.39, 19.46)
-# c(-2.24, 32.43)
-P50 <- c(g$par[1], -2.153)
-slope <- c(g$par[2], 19.472)
+# opt <- c(-2.292, 49.27)
+P50 <- c(-2.292, -2.153)
+slope <- c(49.27, 19.472)
 x1sc <- x1s
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -336,18 +335,18 @@ wp_evaluation <- function(S, wp_data, E_data, title) {
   p2 <- evaluation_plot(S, E_data, type="E", cohort = "T2_168")+ ylim(c(0,2))+
     labs(title = "", subtitle = "Sap flux Quercus ilex")+ ylab("")+
     theme_classic()+theme(legend.position = "none")
-  p3<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-6.5,0))+
+  p3<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-9,0))+
     theme_classic()+theme(legend.position = c(0.2,0.25)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
-  p4<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-10,0))+ylab("")+
+  p4<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-13,0))+ylab("")+
     labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position = "none")
-  p5 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
-    theme_classic()+ theme(legend.position = c(0.2,0.9))+labs(title=title, subtitle="PLC")
-  return(cowplot::plot_grid(p1, p2, p3, p4, p5, ncol = 5, rel_widths = c(1,1,1,1,1.3)))  
+  # p5 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
+  #   theme_classic()+ theme(legend.position = c(0.2,0.9))+labs(title=title, subtitle="PLC")
+  return(cowplot::plot_grid(p1, p2, p3, p4, ncol = 4, rel_widths = c(1,1,1,1)))  
 }
 p1 <-wp_evaluation(S2b, wp_data, E_data, "Sureau")
 p2 <-wp_evaluation(S1, wp_data, E_data, "Sperry non-segmented")
 p3 <-wp_evaluation(S1s, wp_data, E_data, "Sperry segmented (Kleaf)")
-p4 <-wp_evaluation(S1st, wp_data, E_data, "Sperry segmented (Calibr.)")
+p4 <-wp_evaluation(S1sc, wp_data, E_data, "Sperry segmented (Calibr.)")
 p <-plot_grid(p1, p2, p3, p4, nrow = 4)
 ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real.png", p, width = 18, height = 12, bg = "white")
 

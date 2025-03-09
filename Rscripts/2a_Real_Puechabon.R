@@ -50,7 +50,7 @@ control$stemCavitationRecovery <- "annual"
 control$leafCavitationRecovery <- "annual"
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
-control$leafCavitationEffects <- TRUE
+control$leafCavitationEffects <- FALSE
 control$rhizosphereOverlap <- "total"
 control$sunlitShade <- FALSE
 
@@ -195,7 +195,16 @@ opt_function <- function(par) {
 # TEST
 # opt_function(c(-4.5,21))
 
-g <- optim(c(-4.5,20), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(abstol = 0.0001)) 
+library(GA)
+g <- ga(type = "real-valued",
+        fitness = opt_function,
+        lower = c(-5, 10), upper = c(-1,50),
+        popSize = 20,
+        maxiter = 20,
+        optim = FALSE,
+        keepBest = TRUE)
+
+# g <- optim(c(-4.5,20), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(abstol = 0.0001)) 
 
 # opt = c(-2.153, 19.472)
 x1sc <- x1s
@@ -284,11 +293,11 @@ wp_evaluation <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_168")+ ylim(c(0,2))+
     labs(title = title, subtitle = "Sap flux Quercus ilex")+
     theme_classic()+theme(legend.position = c(0.9,0.85))
-  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_168")+ ylim(c(-8,0))+
+  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_168")+ ylim(c(-10,0))+
     labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position =c(0.1,0.25))
-  p3 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
-    theme_classic()+ theme(legend.position = "none")+labs(title=title, subtitle="PLC")
-  return(cowplot::plot_grid(p1, p2, p3, ncol = 3, rel_widths = c(1.5,1.5,1.0)))  
+  # p3 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
+  #   theme_classic()+ theme(legend.position = "none")+labs(title=title, subtitle="PLC")
+  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1.5,1.5)))  
 }
 p1 <-wp_evaluation(S2b, wp_data, E_data,"Sureau")
 p2 <-wp_evaluation(S1, wp_data, E_data, "Sperry non-segmented")
