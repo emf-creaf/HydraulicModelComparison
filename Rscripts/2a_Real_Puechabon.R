@@ -172,6 +172,76 @@ wp_data <- read.table("Data/Puechabon/Water_Potential_MIND_Control-1.csv",sep = 
 row.names(wp_data) <- as.character(wp_data$Date)
 
 
+library(GA)
+
+# Calibration (non-segmented) ---------------------------------------------
+opt_function_ns <- function(par) {
+  P50 <- par[1]
+  slope <- par[2]
+  x1st <- x1 # Non-segmented
+  psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
+  wb <- hydraulics_psi2Weibull(psi50 = P50, psi88 = psi88)
+  x1st$paramsTranspiration$VCleaf_P50 <- P50
+  x1st$paramsTranspiration$VCleaf_slope <- slope
+  x1st$paramsTranspiration$VCleaf_c <- wb["c"]
+  x1st$paramsTranspiration$VCleaf_d <- wb["d"]
+  x1st$paramsTranspiration$VCstem_P50 <- P50
+  x1st$paramsTranspiration$VCstem_slope <- slope
+  x1st$paramsTranspiration$VCstem_c <- wb["c"]
+  x1st$paramsTranspiration$VCstem_d <- wb["d"]
+  x1st$paramsTranspiration$VCroot_P50 <- P50
+  x1st$paramsTranspiration$VCroot_slope <- slope
+  x1st$paramsTranspiration$VCroot_c <- wb["c"]
+  x1st$paramsTranspiration$VCroot_d <- wb["d"]
+  medfate:::.updateBelow(x1st)
+  x1st$control$verbose <- FALSE
+  S <- spwb(x1st, pue_meteo, 
+            latitude = pue_latitude, elevation = pue_elevation, 
+            slope = pue_slope, aspect = pue_aspect)
+  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_168", metric = "MAE.rel")
+  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_168")
+  mae_wp <- mean(stats_wp$MAE.rel)
+  mae <- (mae_E + mae_wp)/2
+  rm(S)
+  cat(paste0("P50 = ", P50, " slope = ", slope, " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  return(-mae)
+}
+# TEST
+opt_function_ns(c(-4.5,21))
+g_ns <- ga(type = "real-valued",
+        fitness = opt_function_ns,
+        lower = c(-5, 10), upper = c(-1,50),
+        popSize = 20,
+        maxiter = 20,
+        optim = FALSE,
+        keepBest = TRUE)
+
+# opt = c(-2.488121, 13.36921)
+# MAE = -21.35324
+
+P50 <- -2.488121
+slope <- 13.36921
+x1c <- x1 # Non-segmented
+psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
+wb <- hydraulics_psi2Weibull(psi50 = P50, psi88 = psi88)
+x1c$paramsTranspiration$VCleaf_P50 <- P50
+x1c$paramsTranspiration$VCleaf_slope <- slope
+x1c$paramsTranspiration$VCleaf_c <- wb["c"]
+x1c$paramsTranspiration$VCleaf_d <- wb["d"]
+x1c$paramsTranspiration$VCstem_P50 <- P50
+x1c$paramsTranspiration$VCstem_slope <- slope
+x1c$paramsTranspiration$VCstem_c <- wb["c"]
+x1c$paramsTranspiration$VCstem_d <- wb["d"]
+x1c$paramsTranspiration$VCroot_P50 <- P50
+x1c$paramsTranspiration$VCroot_slope <- slope
+x1c$paramsTranspiration$VCroot_c <- wb["c"]
+x1c$paramsTranspiration$VCroot_d <- wb["d"]
+medfate:::.updateBelow(x1c)
+S1c <- spwb(x1c, pue_meteo, 
+          latitude = pue_latitude, elevation = pue_elevation, 
+          slope = pue_slope, aspect = pue_aspect)
+saveRDS(S1c, "Rdata/Puechabon/Real_Puechabon_Sperry_calibrated.rds")
+
 # Calibration -------------------------------------------------------------
 opt_function <- function(par) {
   P50 <- par[1]
@@ -185,17 +255,20 @@ opt_function <- function(par) {
   x1st$paramsTranspiration$VCleaf_d <- wb["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  mae <- evaluation_metric(spwb(x1st, pue_meteo, 
-                                latitude = pue_latitude, elevation = pue_elevation, 
-                                slope = pue_slope, aspect = pue_aspect), 
-                           E_data, type="E", cohort = "T1_168", metric = "MAE")
-  cat(paste0("P50 = ", P50, " slope = ", slope, " MAE = ", mae, "\n"))
-  return(mae)
+  S <- spwb(x1st, pue_meteo, 
+            latitude = pue_latitude, elevation = pue_elevation, 
+            slope = pue_slope, aspect = pue_aspect)
+  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_168", metric = "MAE.rel")
+  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_168")
+  mae_wp <- mean(stats_wp$MAE.rel)
+  mae <- (mae_E + mae_wp)/2
+  rm(S)
+  cat(paste0("P50 = ", P50, " slope = ", slope, " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  return(-mae)
 }
 # TEST
-# opt_function(c(-4.5,21))
+opt_function(c(-4.5,21))
 
-library(GA)
 g <- ga(type = "real-valued",
         fitness = opt_function,
         lower = c(-5, 10), upper = c(-1,50),
@@ -206,10 +279,11 @@ g <- ga(type = "real-valued",
 
 # g <- optim(c(-4.5,20), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(abstol = 0.0001)) 
 
-# opt = c(-2.153, 19.472)
+# opt = c(-2.514235, 18.19012)
+# MAE = -22.24726
 x1sc <- x1s
-psi50 <- -2.153 # g$par[1]
-slope <- 19.472 # g$par[2]
+psi50 <- -2.514235 # g$par[1]
+slope <- 18.19012 # g$par[2]
 psi88 <- psi50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb <- hydraulics_psi2Weibull(psi50 = psi50, psi88 = psi88)
 x1sc$paramsTranspiration$VCleaf_P50 <- psi50
@@ -229,63 +303,72 @@ library(medfate)
 library(cowplot)
 Sys.setlocale("LC_ALL", "en_US.utf8")
 S1 <- readRDS("Rdata/Puechabon/Real_Puechabon_Sperry.rds")
+S1c <- readRDS("Rdata/Puechabon/Real_Puechabon_Sperry_calibrated.rds")
 S2b <- readRDS("Rdata/Puechabon/Real_Puechabon_Sureau_Baldocchi.rds")
 S1s <- readRDS("Rdata/Puechabon/Real_Puechabon_Sperry_segmented.rds")
 S1sc <- readRDS("Rdata/Puechabon/Real_Puechabon_Sperry_segmented_calibrated.rds")
 p1 <- plot(S2b, "SoilPsi")+ylim(c(-5,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
 p2 <- plot(S1, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-not-segmented")+theme(legend.position = c(0.8,0.8))
-p3 <- plot(S1s, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
-p4 <- plot(S1sc, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented-cal")+theme(legend.position = c(0.8,0.8))
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-not-segmented-cal")+theme(legend.position = c(0.8,0.8))
+p4 <- plot(S1s, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
+p5 <- plot(S1sc, "SoilPsi")+ylim(c(-5,0))+labs(title="Sperry-segmented-cal")+theme(legend.position = c(0.8,0.8))
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/SoilPsi_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
 p2 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/HydraulicRedistribution_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-8,0))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/LeafPsiRange_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.0))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/Transpiration_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/StomatalConductance_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/StemPLC_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p2 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry")
-p3 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p2 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
+p3 <- plot(S1c, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/LeafPLC_Puechabon_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/SoilPlantConductance_Puechabon_Real.png", p, width = 8, height = 11)
 
 # Evaluation --------------------------------------------------------------
@@ -294,24 +377,27 @@ wp_evaluation <- function(S, wp_data, E_data, title) {
     labs(title = title, subtitle = "Sap flux Quercus ilex")+
     theme_classic()+theme(legend.position = c(0.9,0.85))
   p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_168")+ ylim(c(-10,0))+
-    labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position =c(0.1,0.25))
+    labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position =c(0.1,0.31))
   # p3 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
   #   theme_classic()+ theme(legend.position = "none")+labs(title=title, subtitle="PLC")
   return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1.5,1.5)))  
 }
 p1 <-wp_evaluation(S2b, wp_data, E_data,"Sureau")
 p2 <-wp_evaluation(S1, wp_data, E_data, "Sperry non-segmented")
-p3 <-wp_evaluation(S1s, wp_data, E_data,"Sperry segmented (Kleaf)")
-p4 <-wp_evaluation(S1sc, wp_data, E_data,"Sperry segmented (Calibr.)")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <-wp_evaluation(S1c, wp_data, E_data, "Sperry non-segmented (Calibr.)")
+p4 <-wp_evaluation(S1s, wp_data, E_data,"Sperry segmented (Kleaf)")
+p5 <-wp_evaluation(S1sc, wp_data, E_data,"Sperry segmented (Calibr.)")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/Evaluation_Puechabon_Real.png", p, width = 18, height = 12, bg = "white")
 
 S1_stats <- evaluation_stats(S1, E_data, type="E", cohort = "T1_168")
+S1c_stats <- evaluation_stats(S1c, E_data, type="E", cohort = "T1_168")
 S1s_stats <- evaluation_stats(S1s, E_data, type="E", cohort = "T1_168")
 S1sc_stats <- evaluation_stats(S1sc, E_data, type="E", cohort = "T1_168")
 S2b_stats <- evaluation_stats(S2b, E_data, type="E", cohort = "T1_168")
 
 S2b_stats
 S1_stats
+S1c_stats
 S1s_stats
 S1sc_stats
