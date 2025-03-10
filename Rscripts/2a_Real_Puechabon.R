@@ -374,7 +374,7 @@ ggsave2("Plots/Puechabon_Real/SoilPlantConductance_Puechabon_Real.png", p, width
 # Evaluation --------------------------------------------------------------
 wp_evaluation <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_168")+ ylim(c(0,2))+
-    labs(title = title, subtitle = "Sap flux Quercus ilex")+
+    labs(title = title, subtitle = "Sap flux Quercus ilex")+ ylab("Transpiration (kg/m2)")
     theme_classic()+theme(legend.position = c(0.9,0.85))
   p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_168")+ ylim(c(-10,0))+
     labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position =c(0.1,0.31))
