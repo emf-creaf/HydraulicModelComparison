@@ -162,32 +162,48 @@ extract_spparams(x2b)
 
 
 # Observed data -----------------------------------------------------------
-pot_20170620 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170620.txt", skip = 11) 
-pot_20170712 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170712.txt", skip = 11) 
-pot_20170830 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170830.txt", skip = 11) 
-
-extract_wp <- function(x, date) {
-  pot_pine <- x |>
-    dplyr::filter(is.na(remarques), parcelle=="TD") |>
-    dplyr::mutate(sp = substr(arbre,1,1)) |>
-    dplyr::filter(sp == "p") |>
-    dplyr::summarise(PD_T1_148 = mean(Pb), PD_T1_148_err = sqrt(var(Pb)),
-                     MD_T1_148 = mean(Pm), MD_T1_148_err = sqrt(var(Pm))) 
-  pot_oak <- x |>
-    dplyr::filter(is.na(remarques), parcelle=="TD") |>
-    dplyr::mutate(sp = substr(arbre,1,1)) |>
-    dplyr::filter(sp == "c") |>
-    dplyr::summarise(PD_T2_168 = mean(Pb), PD_T2_168_err = sqrt(var(Pb)),
-                     MD_T2_168 = mean(Pm), MD_T2_168_err = sqrt(var(Pm))) 
-  pot <- dplyr::bind_cols(pot_pine, pot_oak)|>
-    dplyr::mutate(dates = as.Date(date))
-  return(pot)
-}
-wp_data <- bind_rows(extract_wp(pot_20170620, "2017-06-20"),
-                     extract_wp(pot_20170712, "2017-07-12"),
-                     extract_wp(pot_20170830, "2017-08-30")) |>
+pot_input <- read.table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_recapitulatif.txt", header = TRUE)
+pot_pine <- pot_input |>
+  dplyr::filter(parcelle=="TD", espece == "p") |>
+  dplyr::group_by(Date) |>
+  dplyr::summarise(PD_T1_148 = mean(Pb), PD_T1_148_err = sqrt(var(Pb)),
+                   MD_T1_148 = mean(Pm), MD_T1_148_err = sqrt(var(Pm))) 
+pot_oak <- pot_input |>
+  dplyr::filter(parcelle=="TD", espece == "c") |>
+  dplyr::group_by(Date) |>
+  dplyr::summarise(PD_T2_168 = mean(Pb), PD_T2_168_err = sqrt(var(Pb)),
+                   MD_T2_168 = mean(Pm), MD_T2_168_err = sqrt(var(Pm))) 
+wp_data <- dplyr::left_join(pot_pine, pot_oak, by="Date")|>
+  dplyr::mutate(dates = as.Date(Date, format = "%Y-%m-%d"))|>
   as.data.frame()
 row.names(wp_data) <- as.character(wp_data$dates)
+
+# pot_20170620 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170620.txt", skip = 11) 
+# pot_20170712 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170712.txt", skip = 11) 
+# pot_20170830 <- read_table("Data/FontBlanche/Fontblanche_Potentiels_Hydriques_20170830.txt", skip = 11) 
+# 
+# extract_wp <- function(x, date) {
+#   pot_pine <- x |>
+#     dplyr::filter(is.na(remarques), parcelle=="TD") |>
+#     dplyr::mutate(sp = substr(arbre,1,1)) |>
+#     dplyr::filter(sp == "p") |>
+#     dplyr::summarise(PD_T1_148 = mean(Pb), PD_T1_148_err = sqrt(var(Pb)),
+#                      MD_T1_148 = mean(Pm), MD_T1_148_err = sqrt(var(Pm))) 
+#   pot_oak <- x |>
+#     dplyr::filter(is.na(remarques), parcelle=="TD") |>
+#     dplyr::mutate(sp = substr(arbre,1,1)) |>
+#     dplyr::filter(sp == "c") |>
+#     dplyr::summarise(PD_T2_168 = mean(Pb), PD_T2_168_err = sqrt(var(Pb)),
+#                      MD_T2_168 = mean(Pm), MD_T2_168_err = sqrt(var(Pm))) 
+#   pot <- dplyr::bind_cols(pot_pine, pot_oak)|>
+#     dplyr::mutate(dates = as.Date(date))
+#   return(pot)
+# }
+# wp_data <- bind_rows(extract_wp(pot_20170620, "2017-06-20"),
+#                      extract_wp(pot_20170712, "2017-07-12"),
+#                      extract_wp(pot_20170830, "2017-08-30")) |>
+#   as.data.frame()
+# row.names(wp_data) <- as.character(wp_data$dates)
 
 FR_FBn_VG_Sap_Flow_3_L2C <- read_delim("Data/FontBlanche/FR-FBn_VG_Sap_Flow_3_L2C.csv", 
                                        delim = ";", escape_double = FALSE, trim_ws = TRUE,
