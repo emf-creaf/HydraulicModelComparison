@@ -223,6 +223,88 @@ E_data$E_T1_148 <- E_data$E_T1_148/lai[1]
 E_data$E_T2_168 <- E_data$E_T2_168/lai[2]
 row.names(E_data) <- as.character(E_data$dates)
 
+# Calibration (non-segmented) ---------------------------------------------
+opt_function_ns <- function(par) {
+  P50 <- c(par[1], -2.514235)
+  slope <- c(par[2], 18.19012)
+  x1st <- x1 # Non-segmented
+  psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
+  wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
+  wb_2 <- hydraulics_psi2Weibull(psi50 = P50[2], psi88 = psi88[2])
+  x1st$paramsTranspiration$VCleaf_P50 <- P50
+  x1st$paramsTranspiration$VCleaf_slope <- slope
+  x1st$paramsTranspiration$VCleaf_c[1] <- wb_1["c"]
+  x1st$paramsTranspiration$VCleaf_d[1] <- wb_1["d"]
+  x1st$paramsTranspiration$VCleaf_c[2] <- wb_2["c"]
+  x1st$paramsTranspiration$VCleaf_d[2] <- wb_2["d"]
+  x1st$paramsTranspiration$VCstem_P50 <- P50
+  x1st$paramsTranspiration$VCstem_slope <- slope
+  x1st$paramsTranspiration$VCstem_c[1] <- wb_1["c"]
+  x1st$paramsTranspiration$VCstem_d[1] <- wb_1["d"]
+  x1st$paramsTranspiration$VCstem_c[2] <- wb_2["c"]
+  x1st$paramsTranspiration$VCstem_d[2] <- wb_2["d"]
+  x1st$paramsTranspiration$VCroot_P50 <- P50
+  x1st$paramsTranspiration$VCroot_slope <- slope
+  x1st$paramsTranspiration$VCroot_c[1] <- wb_1["c"]
+  x1st$paramsTranspiration$VCroot_d[1] <- wb_1["d"]
+  x1st$paramsTranspiration$VCroot_c[2] <- wb_2["c"]
+  x1st$paramsTranspiration$VCroot_d[2] <- wb_2["d"]
+  medfate:::.updateBelow(x1st)
+  x1st$control$verbose <- FALSE
+  S <- spwb(x1st, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
+  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
+  mae_wp <- mean(stats_wp$MAE.rel)
+  mae <- (mae_E + mae_wp)/2
+  rm(S)
+  cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  return(-mae)
+}
+
+# TEST
+opt_function_ns(c(-4.8,46))
+g_ns <- ga(type = "real-valued",
+           fitness = opt_function_ns,
+           lower = c(-5, 10), upper = c(-1,50),
+           popSize = 20,
+           maxiter = 20,
+           optim = FALSE,
+           keepBest = TRUE)
+
+# opt = c(-2.507, 33.83)
+# MAE = 38.70
+
+P50 <- c(-2.507, -2.514235)
+slope <- c(33.83, 18.19012)
+x1c <- x1 # Non-segmented
+psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
+wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
+wb_2 <- hydraulics_psi2Weibull(psi50 = P50[2], psi88 = psi88[2])
+x1c$paramsTranspiration$VCleaf_P50 <- P50
+x1c$paramsTranspiration$VCleaf_slope <- slope
+x1c$paramsTranspiration$VCleaf_c[1] <- wb_1["c"]
+x1c$paramsTranspiration$VCleaf_d[1] <- wb_1["d"]
+x1c$paramsTranspiration$VCleaf_c[2] <- wb_2["c"]
+x1c$paramsTranspiration$VCleaf_d[2] <- wb_2["d"]
+x1c$paramsTranspiration$VCstem_P50 <- P50
+x1c$paramsTranspiration$VCstem_slope <- slope
+x1c$paramsTranspiration$VCstem_c[1] <- wb_1["c"]
+x1c$paramsTranspiration$VCstem_d[1] <- wb_1["d"]
+x1c$paramsTranspiration$VCstem_c[2] <- wb_2["c"]
+x1c$paramsTranspiration$VCstem_d[2] <- wb_2["d"]
+x1c$paramsTranspiration$VCroot_P50 <- P50
+x1c$paramsTranspiration$VCroot_slope <- slope
+x1c$paramsTranspiration$VCroot_c[1] <- wb_1["c"]
+x1c$paramsTranspiration$VCroot_d[1] <- wb_1["d"]
+x1c$paramsTranspiration$VCroot_c[2] <- wb_2["c"]
+x1c$paramsTranspiration$VCroot_d[2] <- wb_2["d"]
+medfate:::.updateBelow(x1c)
+S1c <- spwb(x1c, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+saveRDS(S1c, "Rdata/FontBlanche/Real_FontBlanche_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
 opt_function <- function(par) {
@@ -262,9 +344,10 @@ g <- ga(type = "real-valued",
         maxiter = 20,
         optim = FALSE,
         keepBest = TRUE)
-# opt <- c(-2.292, 49.27)
-P50 <- c(-2.292, -2.514235)
-slope <- c(49.27, 18.19012)
+# opt <- c(-2.28105805384542,  35.689843700499)
+# MAE <- 38.65499
+P50 <- c(-2.2811, -2.514235)
+slope <- c(35.690, 18.19012)
 x1sc <- x1s
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])

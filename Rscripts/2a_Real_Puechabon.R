@@ -242,7 +242,7 @@ S1c <- spwb(x1c, pue_meteo,
           slope = pue_slope, aspect = pue_aspect)
 saveRDS(S1c, "Rdata/Puechabon/Real_Puechabon_Sperry_calibrated.rds")
 
-# Calibration -------------------------------------------------------------
+# Calibration (segmented) -------------------------------------------------------------
 opt_function <- function(par) {
   P50 <- par[1]
   slope <- par[2]
