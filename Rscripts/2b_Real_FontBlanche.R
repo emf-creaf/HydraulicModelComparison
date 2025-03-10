@@ -208,10 +208,10 @@ E_data$E_T2_168 <- E_data$E_T2_168/lai[2]
 row.names(E_data) <- as.character(E_data$dates)
 
 
-# Calibration -------------------------------------------------------------
+# Calibration (segmented) -------------------------------------------------------------
 opt_function <- function(par) {
-  P50 <- c(par[1], -2.153)
-  slope <- c(par[2], 19.472)
+  P50 <- c(par[1], -2.514235)
+  slope <- c(par[2], 18.19012)
   x1st <- x1s
   psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
   wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -224,11 +224,16 @@ opt_function <- function(par) {
   x1st$paramsTranspiration$VCleaf_d[2] <- wb_2["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  mae <- evaluation_metric(spwb(x1st, fb_meteo, 
-                                latitude = fb_latitude, elevation = fb_elevation, 
-                                slope = fb_slope, aspect = fb_aspect), 
-                           E_data, type="E", cohort = "T1_148", metric = "MAE")
-  cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE = ", mae, "\n"))
+  S <- spwb(x1st, fb_meteo, 
+            latitude = fb_latitude, elevation = fb_elevation, 
+            slope = fb_slope, aspect = fb_aspect)
+
+  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
+  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
+  mae_wp <- mean(stats_wp$MAE.rel)
+  mae <- (mae_E + mae_wp)/2
+  rm(S)
+  cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
   return(-1.0*mae)
 }
 opt_function(c(-2.0,40))
@@ -242,8 +247,8 @@ g <- ga(type = "real-valued",
         optim = FALSE,
         keepBest = TRUE)
 # opt <- c(-2.292, 49.27)
-P50 <- c(-2.292, -2.153)
-slope <- c(49.27, 19.472)
+P50 <- c(-2.292, -2.514235)
+slope <- c(49.27, 18.19012)
 x1sc <- x1s
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])

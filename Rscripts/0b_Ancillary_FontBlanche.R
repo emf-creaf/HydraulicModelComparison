@@ -40,7 +40,7 @@ fontblanche_input <- function(control) {
   ph <- 1
   qi <- 2
   
-  k_plant <- c(0.35, 0.8)
+  k_plant <- c(0.55, 0.8)
 
   rf_leaf <- c(0.40, 0.60)
   rf_leaf_apo <- c(0.15, 0.20)
