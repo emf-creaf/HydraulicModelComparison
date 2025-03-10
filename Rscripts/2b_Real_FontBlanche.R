@@ -371,103 +371,120 @@ library(cowplot)
 library(ggplot2)
 Sys.setlocale("LC_ALL", "en_US.utf8")
 S1 <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry.rds")
+S1c <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry_calibrated.rds")
 S1s <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented.rds")
 S1sc <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented_calibrated.rds")
 S2b <- readRDS("Rdata/FontBlanche/Real_FontBlanche_Sureau_Baldocchi_no_overlap.rds")
 
 p1 <- plot(S2b, "SoilPsi")+ylim(c(-7,0))+labs(title="Sureau")+theme(legend.position = c(0.8,0.8))
 p2 <- plot(S1, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-not-segmented")+theme(legend.position = c(0.8,0.8))
-p3 <- plot(S1s, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
-p4 <- plot(S1sc, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-segmented-cal")+theme(legend.position = c(0.8,0.8))
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-not-segmented-cal")+theme(legend.position = c(0.8,0.8))
+p4 <- plot(S1s, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-segmented")+theme(legend.position = c(0.8,0.8))
+p5 <- plot(S1sc, "SoilPsi")+ylim(c(-7,0))+labs(title="Sperry-segmented-cal")+theme(legend.position = c(0.8,0.8))
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/SoilPsi_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
 p2 <- plot(S1, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "HydraulicRedistribution")+ylim(c(0,0.5))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/HydraulicRedistribution_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sureau")
 p2 <- plot(S1, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "LeafPsiRange", bySpecies = TRUE)+ylim(c(-10,0))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/LeafPsiRange_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sureau")
 p2 <- plot(S1, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "Transpiration", bySpecies = TRUE)+ylim(c(0,3.5))+theme(legend.position = c(0.1,0.2))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/Transpiration_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sureau")
 p2 <- plot(S1, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.2))+ylim(c(0,0.3))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/StomatalConductance_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sureau")
 p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/StemPLC_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
 p2 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
+p3 <- plot(S1c, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/LeafPLC_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
 p2 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
-p4 <- plot(S1sc, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
-p <-plot_grid(p1, p2, p3, p4, nrow = 3)
+p3 <- plot(S1c, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented-cal")
+p4 <- plot(S1s, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented")
+p5 <- plot(S1sc, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-segmented-cal")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/SoilPlantConductance_FontBlanche_Real.png", p, width = 8, height = 11)
 
 
-wp_evaluation <- function(S, wp_data, E_data, title) {
-  p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,2))+
-    labs(title = title, subtitle = "Sap flux Pinus halepensis")+
-    theme_classic()+theme(legend.position = c(0.8,0.8))
-  p2 <- evaluation_plot(S, E_data, type="E", cohort = "T2_168")+ ylim(c(0,2))+
-    labs(title = "", subtitle = "Sap flux Quercus ilex")+ ylab("")+
+wp_evaluation_oak <- function(S, wp_data, E_data, title) {
+  p1 <- evaluation_plot(S, E_data, type="E", cohort = "T2_168")+ ylim(c(0,2))+
+    labs(title = title, subtitle = "Sap flux Quercus ilex")+ ylab("")+
     theme_classic()+theme(legend.position = "none")
-  p3<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-9,0))+
-    theme_classic()+theme(legend.position = c(0.2,0.25)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
-  p4<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-13,0))+ylab("")+
-    labs(subtitle = "Leaf WP Quercus ilex", title = "")+theme_classic()+ theme(legend.position = "none")
-  # p5 <- plot(S, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+
-  #   theme_classic()+ theme(legend.position = c(0.2,0.9))+labs(title=title, subtitle="PLC")
-  return(cowplot::plot_grid(p1, p2, p3, p4, ncol = 4, rel_widths = c(1,1,1,1)))  
+  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-10,0))+ylab("")+
+    labs(subtitle = "Leaf WP Quercus ilex", title = title)+theme_classic()+ theme(legend.position = "none")
+  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
 }
-p1 <-wp_evaluation(S2b, wp_data, E_data, "Sureau")
-p2 <-wp_evaluation(S1, wp_data, E_data, "Sperry non-segmented")
-p3 <-wp_evaluation(S1s, wp_data, E_data, "Sperry segmented (Kleaf)")
-p4 <-wp_evaluation(S1sc, wp_data, E_data, "Sperry segmented (Calibr.)")
-p <-plot_grid(p1, p2, p3, p4, nrow = 4)
-ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real.png", p, width = 18, height = 12, bg = "white")
+p1 <-wp_evaluation_oak(S2b, wp_data, E_data, "Sureau")
+p2 <-wp_evaluation_oak(S1, wp_data, E_data, "Sperry non-segmented (measured)")
+p3 <-wp_evaluation_oak(S1c, wp_data, E_data, "Sperry non-segmented (calibrated)")
+p4 <-wp_evaluation_oak(S1s, wp_data, E_data, "Sperry segmented (measured)")
+p5 <-wp_evaluation_oak(S1sc, wp_data, E_data, "Sperry segmented (calibrated)")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
+ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real_Oak.png", p, width = 17, height = 12, bg = "white")
 
-S1_stats_p <- evaluation_stats(S1, E_data, type="E", cohort = "T1_148")
-S1_stats_q <- evaluation_stats(S1, E_data, type="E", cohort = "T2_168")
-S1s_stats_p <- evaluation_stats(S1s, E_data, type="E", cohort = "T1_148")
-S1s_stats_q <- evaluation_stats(S1s, E_data, type="E", cohort = "T2_168")
-S1sc_stats_p <- evaluation_stats(S1sc, E_data, type="E", cohort = "T1_148")
-S1sc_stats_q <- evaluation_stats(S1sc, E_data, type="E", cohort = "T2_168")
-S2b_stats_p <- evaluation_stats(S2b, E_data, type="E", cohort = "T1_148")
-S2b_stats_q <- evaluation_stats(S2b, E_data, type="E", cohort = "T2_168")
-S1_stats_p
-S1_stats_q
-S1s_stats_p
-S1s_stats_q
-S1sc_stats_p
-S1sc_stats_q
-S2b_stats_p
-S2b_stats_q
+evaluation_stats(S1, E_data, type="E", cohort = "T2_168")
+
+wp_evaluation_pine <- function(S, wp_data, E_data, title) {
+  p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,1.5))+ ylab("Transpiration (kg/m2)")+
+    labs(title = title, subtitle = "Sap flux Pinus halepensis")+
+    theme_classic()+theme(legend.position = c(0.9,0.8))
+    theme_classic()+theme(legend.position = "none")
+  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-8,0))+
+    theme_classic()+theme(legend.position = c(0.1,0.35)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
+  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
+}
+p1 <-wp_evaluation_pine(S2b, wp_data, E_data, "Sureau")
+p2 <-wp_evaluation_pine(S1, wp_data, E_data, "Sperry non-segmented (measured)")
+p3 <-wp_evaluation_pine(S1c, wp_data, E_data, "Sperry non-segmented (calibrated)")
+p4 <-wp_evaluation_pine(S1s, wp_data, E_data, "Sperry segmented (measured)")
+p5 <-wp_evaluation_pine(S1sc, wp_data, E_data, "Sperry segmented (calibrated)")
+p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
+ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real_Pine.png", p, width = 17, height = 12, bg = "white")
+
+evaluation_stats(S2b, E_data, type="E", cohort = "T1_148")
+evaluation_stats(S2b, wp_data, type="WP", cohort = "T1_148")
+evaluation_stats(S1, E_data, type="E", cohort = "T1_148")
+evaluation_stats(S1, wp_data, type="WP", cohort = "T1_148")
+evaluation_stats(S1c, E_data, type="E", cohort = "T1_148")
+evaluation_stats(S1c, wp_data, type="WP", cohort = "T1_148")
+evaluation_stats(S1s, E_data, type="E", cohort = "T1_148")
+evaluation_stats(S1s, wp_data, type="WP", cohort = "T1_148")
+evaluation_stats(S1sc, E_data, type="E", cohort = "T1_148")
+evaluation_stats(S1sc, wp_data, type="WP", cohort = "T1_148")
+
 
