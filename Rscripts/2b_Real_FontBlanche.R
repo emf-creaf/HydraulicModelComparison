@@ -223,7 +223,9 @@ E_data$E_T1_148 <- E_data$E_T1_148/lai[1]
 E_data$E_T2_168 <- E_data$E_T2_168/lai[2]
 row.names(E_data) <- as.character(E_data$dates)
 
+
 # Calibration (non-segmented) ---------------------------------------------
+library(GA)
 opt_function_ns <- function(par) {
   P50 <- c(par[1], -2.514235)
   slope <- c(par[2], 18.19012)
@@ -463,7 +465,6 @@ wp_evaluation_pine <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,1.5))+ ylab("Transpiration (kg/m2)")+
     labs(title = title, subtitle = "Sap flux Pinus halepensis")+
     theme_classic()+theme(legend.position = c(0.9,0.8))
-    theme_classic()+theme(legend.position = "none")
   p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-8,0))+
     theme_classic()+theme(legend.position = c(0.1,0.35)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
   return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  

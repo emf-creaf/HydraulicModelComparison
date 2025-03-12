@@ -34,7 +34,7 @@ yatir_input <- function(control) {
   yat_forest <- yatir_forest()
   yat_soil <- yatir_soil()
   
-  k_plant <- 0.35
+  k_plant <- 0.55
   
   rf_leaf <- 0.40
   rf_leaf_apo <- 0.15
