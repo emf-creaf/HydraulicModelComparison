@@ -2,7 +2,7 @@
 fontblanche_soil <- function(){
   fb_soil_df <- defaultSoilParams(n = 3)
   fb_soil_df$widths <- c(200, 800, 3000)
-  fb_soil_df$rfc <- c(50, 70, 94)
+  fb_soil_df$rfc <- c(50, 65, 85)
   fb_soil_df$clay <- rep(39, 3)
   fb_soil_df$sand <- rep(26, 3)
   fb_soil_df$om <- c(6,3,1)

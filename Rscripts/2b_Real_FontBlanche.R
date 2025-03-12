@@ -31,8 +31,8 @@ fb_meteo <- read_delim("Data/FontBlanche/Climate_FontBlanche_GapFilled.csv",
          WindSpeed = WS_mean) |>
   mutate(dates = as.Date(dates, format = "%d/%m/%Y"),
          Radiation = Radiation/100)|>
-  filter(dates >= as.Date("2016-01-01"),
-         dates <= as.Date("2018-12-31"))
+  filter(dates >= as.Date("2014-01-01"),
+         dates <= as.Date("2016-12-31"))
 
 
 
