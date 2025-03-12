@@ -532,8 +532,8 @@ wp_evaluation_pine <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,1.5))+ ylab("Transpiration (kg/m2)")+
     labs(title = title, subtitle = "Sap flux Pinus halepensis")+
     theme_classic()+theme(legend.position = c(0.9,0.8))
-  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-8,0))+
-    theme_classic()+theme(legend.position = c(0.1,0.35)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
+  p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T1_148")+ylim(c(-6,0))+
+    theme_classic()+theme(legend.position = c(0.07,0.35)) + labs(title = title, subtitle = "Leaf WP Pinus halepensis")
   return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
 }
 p1 <-wp_evaluation_pine(S2b, wp_data, E_data, "Sureau")
