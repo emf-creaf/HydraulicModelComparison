@@ -306,8 +306,8 @@ g_ns_qi <- ga(type = "real-valued",
 
 
 # Simulation with calibrated values
-P50 <- c(-2.73, -2.2301)
-slope <- c(43.24, 20.599)
+P50 <- c(-2.20, -2.2301)
+slope <- c(26.26, 20.599)
 x1c <- x1 # Non-segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
