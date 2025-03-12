@@ -293,18 +293,21 @@ opt_function_ns <- function(par, cal_species = "Pinus halepensis") {
 
 # Quercus ilex
 # opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
-g_ns_qi <- ga(type = "real-valued",
-              fitness = opt_function_ns,
-              lower = c(-5, 10), upper = c(-1,50),
-              popSize = 20,
-              maxiter = 20,
-              optim = FALSE,
-              keepBest = TRUE,
-              cal_species = "Quercus ilex")
+# g_ns_qi <- ga(type = "real-valued",
+#               fitness = opt_function_ns,
+#               lower = c(-5, 10), upper = c(-1,50),
+#               popSize = 20,
+#               maxiter = 20,
+#               optim = FALSE,
+#               keepBest = TRUE,
+#               cal_species = "Quercus ilex")
+# opt = c(-1.87, 24.69)
+# MAE = 39.84
+
 
 # Simulation with calibrated values
-P50 <- c(-2.507, -2.514235)
-slope <- c(33.83, 18.19012)
+P50 <- c(-2.507, -1.87)
+slope <- c(33.83, 24.69)
 x1c <- x1 # Non-segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
