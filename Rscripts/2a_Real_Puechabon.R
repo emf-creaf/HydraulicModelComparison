@@ -215,12 +215,12 @@ g_ns <- ga(type = "real-valued",
         maxiter = 20,
         optim = FALSE,
         keepBest = TRUE)
-
+saveRDS(g_ns, "Rdata/Puechabon/g_ns_qi.rds")
 # opt = c(-2.488121, 13.36921)
 # MAE = -21.35324
 
-P50 <- -2.488121
-slope <- 13.36921
+P50 <- g_ns@solution[1]
+slope <- g_ns@solution[2]
 x1c <- x1 # Non-segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb <- hydraulics_psi2Weibull(psi50 = P50, psi88 = psi88)
@@ -243,7 +243,7 @@ S1c <- spwb(x1c, pue_meteo,
 saveRDS(S1c, "Rdata/Puechabon/Real_Puechabon_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
-opt_function <- function(par) {
+opt_function_s <- function(par) {
   P50 <- par[1]
   slope <- par[2]
   x1st <- x1s
@@ -267,23 +267,24 @@ opt_function <- function(par) {
   return(-mae)
 }
 # TEST
-opt_function(c(-4.5,21))
+opt_function_s(c(-4.5,21))
 
-g <- ga(type = "real-valued",
-        fitness = opt_function,
+g_s <- ga(type = "real-valued",
+        fitness = opt_function_s,
         lower = c(-5, 10), upper = c(-1,50),
         popSize = 20,
         maxiter = 20,
         optim = FALSE,
         keepBest = TRUE)
+saveRDS(g_s, "Rdata/Puechabon/g_s_qi.rds")
 
 # g <- optim(c(-4.5,20), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(abstol = 0.0001)) 
 
 # opt = c(-2.514235, 18.19012)
 # MAE = -22.24726
 x1sc <- x1s
-psi50 <- -2.514235 # g$par[1]
-slope <- 18.19012 # g$par[2]
+psi50 <- g_s@solution[1] # g$par[1]
+slope <-  g_s@solution[2] # g$par[2]
 psi88 <- psi50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb <- hydraulics_psi2Weibull(psi50 = psi50, psi88 = psi88)
 x1sc$paramsTranspiration$VCleaf_P50 <- psi50

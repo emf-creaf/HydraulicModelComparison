@@ -288,6 +288,7 @@ g_ns_ph <- ga(type = "real-valued",
               optim = FALSE,
               keepBest = TRUE,
               cal_species = "Pinus halepensis")
+saveRDS(g_ns_ph, "Rdata/FontBlanche/g_ns_ph.rds")
 # opt = c(-2.20, 26.26)
 # MAE = 42.81
 
@@ -301,6 +302,7 @@ g_ns_qi <- ga(type = "real-valued",
               optim = FALSE,
               keepBest = TRUE,
               cal_species = "Quercus ilex")
+saveRDS(g_ns_qi, "Rdata/FontBlanche/g_ns_qi.rds")
 # opt = c(-2.2301, 20.599)
 # MAE = 31.07103
 
@@ -388,6 +390,7 @@ g_s_ph <- ga(type = "real-valued",
            optim = FALSE,
            keepBest = TRUE,
            cal_species = "Pinus halepensis")
+saveRDS(g_s_ph, "Rdata/FontBlanche/g_s_ph.rds")
 # opt <- c(-2.486,  35.975)
 # MAE <- 40.8611
 
@@ -401,6 +404,7 @@ g_s_qi <- ga(type = "real-valued",
              optim = FALSE,
              keepBest = TRUE,
              cal_species = "Quercus ilex")
+saveRDS(g_s_qi, "Rdata/FontBlanche/g_s_qi.rds")
 # opt <- c(-2.332,  29.09)
 # MAE <- 33.47
 

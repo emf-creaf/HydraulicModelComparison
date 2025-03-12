@@ -208,6 +208,7 @@ g_ns <- ga(type = "real-valued",
            maxiter = 20,
            optim = FALSE,
            keepBest = TRUE)
+saveRDS(g_ns, "Rdata/Yatir/g_ns_ph.rds")
 
 # opt = c(-2.42084, 17.88761)
 # MAE = 47.95073
@@ -236,7 +237,7 @@ S1c <- spwb(x1c, yat_meteo,
 saveRDS(S1c, "Rdata/Yatir/Real_Yatir_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
-opt_function <- function(par) {
+opt_function_s <- function(par) {
   P50 <- c(par[1])
   slope <- c(par[2])
   x1st <- x1s
@@ -260,16 +261,17 @@ opt_function <- function(par) {
   return(-1.0*mae)
 }
 
-opt_function(c(-2.0,40))
+opt_function_s(c(-2.0,40))
 
-library(GA)
-g <- ga(type = "real-valued",
-        fitness = opt_function,
+g_s <- ga(type = "real-valued",
+        fitness = opt_function_s,
         lower = c(-5, 10), upper = c(-1,50),
         popSize = 20,
         maxiter = 20,
         optim = FALSE,
         keepBest = TRUE)
+saveRDS(g_s, "Rdata/Yatir/g_s_ph.rds")
+
 # opt <- c(-2.651992,  29.0687)
 # MAE <- 48.3357
 P50 <- c(-2.651992)
