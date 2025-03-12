@@ -226,9 +226,14 @@ row.names(E_data) <- as.character(E_data$dates)
 
 # Calibration (non-segmented) ---------------------------------------------
 library(GA)
-opt_function_ns <- function(par) {
-  P50 <- c(par[1], -2.514235)
-  slope <- c(par[2], 18.19012)
+opt_function_ns <- function(par, cal_species = "Pinus halepensis") {
+  if(cal_species =="Pinus halepensis") {
+    P50 <- c(par[1], -2.514235)
+    slope <- c(par[2], 18.19012)
+  } else {
+    P50 <- c(-2.507, par[1])
+    slope <- c(33.83, par[2])
+  }
   x1st <- x1 # Non-segmented
   psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
   wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -256,28 +261,48 @@ opt_function_ns <- function(par) {
   S <- spwb(x1st, fb_meteo, 
             latitude = fb_latitude, elevation = fb_elevation, 
             slope = fb_slope, aspect = fb_aspect)
-  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
-  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
-  mae_wp <- mean(stats_wp$MAE.rel)
-  mae <- (mae_E + mae_wp)/2
+  if(cal_species == "Pinus halepensis") {
+    mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
+    stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
+    mae_wp <- mean(stats_wp$MAE.rel)
+    mae <- (mae_E + mae_wp)/2
+    cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  } else {
+    mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T2_168", metric = "MAE.rel")
+    stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T2_168")
+    mae_wp <- mean(stats_wp$MAE.rel)
+    mae <- (mae_E + mae_wp)/2
+    cat(paste0("P50 = ", P50[2], " slope = ", slope[2], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  }
   rm(S)
-  cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
   return(-mae)
 }
 
-# TEST
-opt_function_ns(c(-4.8,46))
-g_ns <- ga(type = "real-valued",
-           fitness = opt_function_ns,
-           lower = c(-5, 10), upper = c(-1,50),
-           popSize = 20,
-           maxiter = 20,
-           optim = FALSE,
-           keepBest = TRUE)
-
+# Pinus halepensis
+# opt_function_ns(c(-4.8,46), cal_species = "Pinus halepensis") # Test
+# g_ns_ph <- ga(type = "real-valued",
+#               fitness = opt_function_ns,
+#               lower = c(-5, 10), upper = c(-1,50),
+#               popSize = 20,
+#               maxiter = 20,
+#               optim = FALSE,
+#               keepBest = TRUE,
+#               cal_species = "Pinus halepensis")
 # opt = c(-2.507, 33.83)
 # MAE = 38.70
 
+# Quercus ilex
+# opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
+g_ns_qi <- ga(type = "real-valued",
+              fitness = opt_function_ns,
+              lower = c(-5, 10), upper = c(-1,50),
+              popSize = 20,
+              maxiter = 20,
+              optim = FALSE,
+              keepBest = TRUE,
+              cal_species = "Quercus ilex")
+
+# Simulation with calibrated values
 P50 <- c(-2.507, -2.514235)
 slope <- c(33.83, 18.19012)
 x1c <- x1 # Non-segmented
@@ -309,9 +334,14 @@ S1c <- spwb(x1c, fb_meteo,
 saveRDS(S1c, "Rdata/FontBlanche/Real_FontBlanche_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
-opt_function <- function(par) {
-  P50 <- c(par[1], -2.514235)
-  slope <- c(par[2], 18.19012)
+opt_function_s <- function(par, cal_species = "Pinus halepensis") {
+  if(cal_species =="Pinus halepensis") {
+    P50 <- c(par[1], -2.514235)
+    slope <- c(par[2], 18.19012)
+  } else {
+    P50 <- c(-2.2811, par[1])
+    slope <- c(35.690, par[2])
+  }
   x1st <- x1s
   psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
   wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -328,29 +358,52 @@ opt_function <- function(par) {
             latitude = fb_latitude, elevation = fb_elevation, 
             slope = fb_slope, aspect = fb_aspect)
 
-  mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
-  stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
-  mae_wp <- mean(stats_wp$MAE.rel)
-  mae <- (mae_E + mae_wp)/2
+  if(cal_species =="Pinus halepensis") {
+    mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
+    stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_148")
+    mae_wp <- mean(stats_wp$MAE.rel)
+    mae <- (mae_E + mae_wp)/2
+    cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  } else {
+    mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T2_168", metric = "MAE.rel")
+    stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T2_168")
+    mae_wp <- mean(stats_wp$MAE.rel)
+    mae <- (mae_E + mae_wp)/2
+    cat(paste0("P50 = ", P50[2], " slope = ", slope[2], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
+  }
   rm(S)
-  cat(paste0("P50 = ", P50[1], " slope = ", slope[1], " MAE(E) = ", mae_E, " MAE(wp) = ", mae_wp, " MAE = ", mae, "\n"))
   return(-1.0*mae)
 }
-opt_function(c(-2.0,40))
 
-library(GA)
-g <- ga(type = "real-valued",
-        fitness = opt_function,
-        lower = c(-5, 10), upper = c(-1,50),
-        popSize = 20,
-        maxiter = 20,
-        optim = FALSE,
-        keepBest = TRUE)
+# Pinus halepensis
+opt_function_s(c(-2.0,40), cal_species = "Pinus halepensis") #Test
+g_s_ph <- ga(type = "real-valued",
+           fitness = opt_function_s,
+           lower = c(-5, 10), upper = c(-1,50),
+           popSize = 20,
+           maxiter = 20,
+           optim = FALSE,
+           keepBest = TRUE,
+           cal_species = "Pinus halepensis")
 # opt <- c(-2.28105805384542,  35.689843700499)
 # MAE <- 38.65499
+
+# Quercus ilex
+opt_function_s(c(-2.0,40), cal_species = "Quercus ilex") #Test
+g_s_qi <- ga(type = "real-valued",
+             fitness = opt_function_s,
+             lower = c(-5, 10), upper = c(-1,50),
+             popSize = 20,
+             maxiter = 20,
+             optim = FALSE,
+             keepBest = TRUE,
+             cal_species = "Quercus ilex")
+
+
+# Simulation with calibrated values
 P50 <- c(-2.2811, -2.514235)
 slope <- c(35.690, 18.19012)
-x1sc <- x1s
+x1sc <- x1s # Segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
 wb_2 <- hydraulics_psi2Weibull(psi50 = P50[2], psi88 = psi88[2])
