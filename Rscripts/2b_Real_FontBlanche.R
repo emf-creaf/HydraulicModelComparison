@@ -499,9 +499,9 @@ ggsave2("Plots/FontBlanche_Real/SoilPlantConductance_FontBlanche_Real.png", p, w
 wp_evaluation_oak <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T2_168")+ ylim(c(0,2))+
     labs(title = title, subtitle = "Sap flux Quercus ilex")+ ylab("")+
-    theme_classic()+theme(legend.position = "none")
+    theme_classic()+theme(legend.position = c(0.9,0.8))
   p2<- evaluation_plot(S, wp_data, type="WP", cohort = "T2_168")+ ylim(c(-10,0))+ylab("")+
-    labs(subtitle = "Leaf WP Quercus ilex", title = title)+theme_classic()+ theme(legend.position = "none")
+    labs(subtitle = "Leaf WP Quercus ilex", title = title)+theme_classic()+ theme(legend.position = c(0.1,0.35))
   return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
 }
 p1 <-wp_evaluation_oak(S2b, wp_data, E_data, "Sureau")
@@ -512,7 +512,16 @@ p5 <-wp_evaluation_oak(S1sc, wp_data, E_data, "Sperry segmented (calibrated)")
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/Evaluation_FontBlanche_Real_Oak.png", p, width = 17, height = 12, bg = "white")
 
+evaluation_stats(S2b, E_data, type="E", cohort = "T2_168")
+evaluation_stats(S2b, wp_data, type="WP", cohort = "T2_168")
 evaluation_stats(S1, E_data, type="E", cohort = "T2_168")
+evaluation_stats(S1, wp_data, type="WP", cohort = "T2_168")
+evaluation_stats(S1c, E_data, type="E", cohort = "T2_168")
+evaluation_stats(S1c, wp_data, type="WP", cohort = "T2_168")
+evaluation_stats(S1s, E_data, type="E", cohort = "T2_168")
+evaluation_stats(S1s, wp_data, type="WP", cohort = "T2_168")
+evaluation_stats(S1sc, E_data, type="E", cohort = "T2_168")
+evaluation_stats(S1sc, wp_data, type="WP", cohort = "T2_168")
 
 wp_evaluation_pine <- function(S, wp_data, E_data, title) {
   p1 <- evaluation_plot(S, E_data, type="E", cohort = "T1_148")+ ylim(c(0,1.5))+ ylab("Transpiration (kg/m2)")+
