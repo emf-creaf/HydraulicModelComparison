@@ -134,31 +134,6 @@ S1s <- spwb(x1s, fb_meteo,
             slope = fb_slope, aspect = fb_aspect)
 saveRDS(S1s, "Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented.rds")
 
-# Sperry segmented (TLP) --------------------------------------------------
-x1st <- x1s
-psi50 = c(-2.7,-2.5)
-psi88 = -1.4264 + 1.2593*psi50
-wb_1 <- hydraulics_psi2Weibull(psi50 = psi50[1], psi88 = psi88[1])
-wb_2 <- hydraulics_psi2Weibull(psi50 = psi50[2], psi88 = psi88[2])
-psi12 <- c(medfate::hydraulics_xylemPsi(0.88,1, wb_1["c"], wb_2["d"]),
-           medfate::hydraulics_xylemPsi(0.88,1, wb_1["c"], wb_2["d"]))
-x1st$paramsTranspiration$VCleaf_P50 <- psi50
-x1st$paramsTranspiration$VCleaf_slope <- (88.0 - 12.0)/(abs(psi88) - abs(psi12))
-x1st$paramsTranspiration$VCleaf_c <- c(wb_1["c"], wb_2["c"])
-x1st$paramsTranspiration$VCleaf_d <- c(wb_1["d"], wb_2["d"])
-medfate:::.updateBelow(x1st)
-
-S1st <- spwb(x1st, fb_meteo, 
-            latitude = fb_latitude, elevation = fb_elevation, 
-            slope = fb_slope, aspect = fb_aspect)
-saveRDS(S1st, "Rdata/FontBlanche/Real_FontBlanche_Sperry_segmented_TLP.rds")
-
-
-
-extract_spparams(x1)
-extract_spparams(x1s)
-extract_spparams(x1st)
-extract_spparams(x2b)
 
 
 # Observed data -----------------------------------------------------------
@@ -258,8 +233,8 @@ opt_function_ns <- function(par, cal_species = "Pinus halepensis") {
   x1st$paramsTranspiration$VCroot_d[2] <- wb_2["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  S <- spwb(x1st, fb_meteo, 
-            latitude = fb_latitude, elevation = fb_elevation, 
+  S <- spwb(x1st, fb_meteo,
+            latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
   if(cal_species == "Pinus halepensis") {
     mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_148", metric = "MAE.rel")
@@ -279,37 +254,40 @@ opt_function_ns <- function(par, cal_species = "Pinus halepensis") {
 }
 
 # Pinus halepensis
-# opt_function_ns(c(-4.8,46), cal_species = "Pinus halepensis") # Test
+opt_function_ns(c(-4.8,46), cal_species = "Pinus halepensis") # Test
 g_ns_ph <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 20,
-              maxiter = 20,
+              popSize = 40,
+              maxiter = 30,
               optim = FALSE,
               keepBest = TRUE,
               cal_species = "Pinus halepensis")
 saveRDS(g_ns_ph, "Rdata/FontBlanche/g_ns_ph.rds")
-# opt = c(-2.20, 26.26)
-# MAE = 42.81
+
+g_ns_ph <- readRDS("Rdata/FontBlanche/g_ns_ph.rds")
+# opt = c(-2.741812, 40.55099)
+# MAE = 40.25751
 
 # Quercus ilex
-# opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
+opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
 g_ns_qi <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 20,
-              maxiter = 20,
+              popSize = 40,
+              maxiter = 30,
               optim = FALSE,
               keepBest = TRUE,
               cal_species = "Quercus ilex")
 saveRDS(g_ns_qi, "Rdata/FontBlanche/g_ns_qi.rds")
-# opt = c(-2.2301, 20.599)
-# MAE = 31.07103
 
+g_ns_qi <- readRDS("Rdata/FontBlanche/g_ns_qi.rds")
+# opt = c(-2.168199, 18.06897)
+# MAE = 30.69368
 
 # Simulation with calibrated values
-P50 <- c(-2.20, -2.2301)
-slope <- c(26.26, 20.599)
+P50 <- c(g_ns_ph@solution[1], g_ns_qi@solution[1])
+slope <- c(g_ns_ph@solution[2], g_ns_qi@solution[2])
 x1c <- x1 # Non-segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -339,6 +317,7 @@ S1c <- spwb(x1c, fb_meteo,
 saveRDS(S1c, "Rdata/FontBlanche/Real_FontBlanche_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
+library(GA)
 opt_function_s <- function(par, cal_species = "Pinus halepensis") {
   if(cal_species =="Pinus halepensis") {
     P50 <- c(par[1], -2.514235)
@@ -359,8 +338,8 @@ opt_function_s <- function(par, cal_species = "Pinus halepensis") {
   x1st$paramsTranspiration$VCleaf_d[2] <- wb_2["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  S <- spwb(x1st, fb_meteo, 
-            latitude = fb_latitude, elevation = fb_elevation, 
+  S <- spwb(x1st, fb_meteo,
+            latitude = fb_latitude, elevation = fb_elevation,
             slope = fb_slope, aspect = fb_aspect)
 
   if(cal_species =="Pinus halepensis") {
@@ -385,33 +364,36 @@ opt_function_s <- function(par, cal_species = "Pinus halepensis") {
 g_s_ph <- ga(type = "real-valued",
            fitness = opt_function_s,
            lower = c(-5, 10), upper = c(-1,50),
-           popSize = 20,
-           maxiter = 20,
+           popSize = 40,
+           maxiter = 30,
            optim = FALSE,
            keepBest = TRUE,
            cal_species = "Pinus halepensis")
 saveRDS(g_s_ph, "Rdata/FontBlanche/g_s_ph.rds")
-# opt <- c(-2.486,  35.975)
-# MAE <- 40.8611
+
+g_s_ph <- readRDS("Rdata/FontBlanche/g_s_ph.rds")
+# opt <- c(-2.559114,  41.60563)
+# MAE <- 40.42071
 
 # Quercus ilex
-# opt_function_s(c(-2.0,40), cal_species = "Quercus ilex") #Test
+opt_function_s(c(-2.0,40), cal_species = "Quercus ilex") #Test
 g_s_qi <- ga(type = "real-valued",
              fitness = opt_function_s,
              lower = c(-5, 10), upper = c(-1,50),
-             popSize = 20,
-             maxiter = 20,
+             popSize = 40,
+             maxiter = 30,
              optim = FALSE,
              keepBest = TRUE,
              cal_species = "Quercus ilex")
 saveRDS(g_s_qi, "Rdata/FontBlanche/g_s_qi.rds")
-# opt <- c(-2.332,  29.09)
-# MAE <- 33.47
 
+g_s_qi <- readRDS("Rdata/FontBlanche/g_s_qi.rds")
+# opt <- c(-2.015863 ,  23.38618)
+# MAE <- 31.52489
 
 # Simulation with calibrated values
-P50 <- c(-2.486, -2.332)
-slope <- c(35.975, 29.09)
+P50 <- c(g_s_ph@solution[1], g_s_qi@solution[1])
+slope <- c(g_s_ph@solution[2], g_s_qi@solution[2])
 x1sc <- x1s # Segmented
 psi88 <- P50  + log((100.0/88.0)-1.0)*(25.0/slope)
 wb_1 <- hydraulics_psi2Weibull(psi50 = P50[1], psi88 = psi88[1])
@@ -560,3 +542,7 @@ evaluation_stats(S1sc, E_data, type="E", cohort = "T1_148")
 evaluation_stats(S1sc, wp_data, type="WP", cohort = "T1_148")
 
 
+extract_spparams(x1)
+extract_spparams(x1s)
+extract_spparams(x1sc)
+extract_spparams(x2b)

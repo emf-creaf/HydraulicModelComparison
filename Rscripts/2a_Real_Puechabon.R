@@ -123,30 +123,6 @@ S1s <- spwb(x1s, pue_meteo,
 saveRDS(S1s, "Rdata/Puechabon/Real_Puechabon_Sperry_segmented.rds")
 
 
-# Sperry segmented (TLP) --------------------------------------------------
-x1st <- x1s
-psi50 = -2.5
-psi88 = -1.4264 + 1.2593*psi50
-wb <- hydraulics_psi2Weibull(psi50 = psi50, psi88 = psi88)
-psi12 <- medfate::hydraulics_xylemPsi(0.88,1, wb["c"], wb["d"])
-x1st$paramsTranspiration$VCleaf_P50 <- psi50
-x1st$paramsTranspiration$VCleaf_slope <- (88.0 - 12.0)/(abs(psi88) - abs(psi12))
-x1st$paramsTranspiration$VCleaf_c <- wb["c"]
-x1st$paramsTranspiration$VCleaf_d <- wb["d"]
-medfate:::.updateBelow(x1st)
-
-S1st <- spwb(x1st, pue_meteo, 
-            latitude = pue_latitude, elevation = pue_elevation, 
-            slope = pue_slope, aspect = pue_aspect)
-saveRDS(S1st, "Rdata/Puechabon/Real_Puechabon_Sperry_segmented_TLP.rds")
-
-
-extract_spparams(x1)
-extract_spparams(x1s)
-extract_spparams(x1st)
-extract_spparams(x2b)
-
-
 # Observed data -----------------------------------------------------------
 
 E_data <- readxl::read_excel("Data/Puechabon/Sapflow_day_SMR_2016-2018.xlsx") |>
@@ -172,9 +148,8 @@ wp_data <- read.table("Data/Puechabon/Water_Potential_MIND_Control-1.csv",sep = 
 row.names(wp_data) <- as.character(wp_data$Date)
 
 
-library(GA)
-
 # Calibration (non-segmented) ---------------------------------------------
+library(GA)
 opt_function_ns <- function(par) {
   P50 <- par[1]
   slope <- par[2]
@@ -195,8 +170,8 @@ opt_function_ns <- function(par) {
   x1st$paramsTranspiration$VCroot_d <- wb["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  S <- spwb(x1st, pue_meteo, 
-            latitude = pue_latitude, elevation = pue_elevation, 
+  S <- spwb(x1st, pue_meteo,
+            latitude = pue_latitude, elevation = pue_elevation,
             slope = pue_slope, aspect = pue_aspect)
   mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_168", metric = "MAE.rel")
   stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_168")
@@ -211,14 +186,15 @@ opt_function_ns(c(-4.5,21))
 g_ns <- ga(type = "real-valued",
         fitness = opt_function_ns,
         lower = c(-5, 10), upper = c(-1,50),
-        popSize = 20,
-        maxiter = 20,
+        popSize = 40,
+        maxiter = 30,
         optim = FALSE,
         keepBest = TRUE)
 saveRDS(g_ns, "Rdata/Puechabon/g_ns_qi.rds")
-# opt = c(-2.488121, 13.36921)
-# MAE = -21.35324
 
+g_ns <- readRDS("Rdata/Puechabon/g_ns_qi.rds")
+# opt = c(-2.786219, 15.16816)
+# MAE = -22.42155
 P50 <- g_ns@solution[1]
 slope <- g_ns@solution[2]
 x1c <- x1 # Non-segmented
@@ -243,6 +219,7 @@ S1c <- spwb(x1c, pue_meteo,
 saveRDS(S1c, "Rdata/Puechabon/Real_Puechabon_Sperry_calibrated.rds")
 
 # Calibration (segmented) -------------------------------------------------------------
+library(GA)
 opt_function_s <- function(par) {
   P50 <- par[1]
   slope <- par[2]
@@ -255,8 +232,8 @@ opt_function_s <- function(par) {
   x1st$paramsTranspiration$VCleaf_d <- wb["d"]
   medfate:::.updateBelow(x1st)
   x1st$control$verbose <- FALSE
-  S <- spwb(x1st, pue_meteo, 
-            latitude = pue_latitude, elevation = pue_elevation, 
+  S <- spwb(x1st, pue_meteo,
+            latitude = pue_latitude, elevation = pue_elevation,
             slope = pue_slope, aspect = pue_aspect)
   mae_E <- evaluation_metric(S, E_data, type="E", cohort = "T1_168", metric = "MAE.rel")
   stats_wp <- evaluation_stats(S, wp_data, type="WP", cohort = "T1_168")
@@ -272,16 +249,15 @@ opt_function_s(c(-4.5,21))
 g_s <- ga(type = "real-valued",
         fitness = opt_function_s,
         lower = c(-5, 10), upper = c(-1,50),
-        popSize = 20,
-        maxiter = 20,
+        popSize = 40,
+        maxiter = 30,
         optim = FALSE,
         keepBest = TRUE)
 saveRDS(g_s, "Rdata/Puechabon/g_s_qi.rds")
 
-# g <- optim(c(-4.5,20), fn = opt_function, lower = c(-5, 10), upper = c(-1,50), control = list(abstol = 0.0001)) 
-
-# opt = c(-2.514235, 18.19012)
-# MAE = -22.24726
+g_s <- readRDS("Rdata/Puechabon/g_s_qi.rds")
+# opt = c(-2.575407, 19.58818)
+# MAE = -22.2261
 x1sc <- x1s
 psi50 <- g_s@solution[1] # g$par[1]
 slope <-  g_s@solution[2] # g$par[2]
@@ -391,14 +367,17 @@ p5 <-wp_evaluation(S1sc, wp_data, E_data,"Sperry segmented (calibrated)")
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/Evaluation_Puechabon_Real.png", p, width = 17, height = 12, bg = "white")
 
-S1_stats <- evaluation_stats(S1, E_data, type="E", cohort = "T1_168")
-S1c_stats <- evaluation_stats(S1c, E_data, type="E", cohort = "T1_168")
-S1s_stats <- evaluation_stats(S1s, E_data, type="E", cohort = "T1_168")
-S1sc_stats <- evaluation_stats(S1sc, E_data, type="E", cohort = "T1_168")
-S2b_stats <- evaluation_stats(S2b, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S1, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S1, wp_data, type="WP", cohort = "T1_168")
 
-S2b_stats
-S1_stats
-S1c_stats
-S1s_stats
-S1sc_stats
+evaluation_stats(S1c, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S1c, wp_data, type="WP", cohort = "T1_168")
+
+evaluation_stats(S1s, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S1s, wp_data, type="WP", cohort = "T1_168")
+
+evaluation_stats(S1sc, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S1sc, wp_data, type="WP", cohort = "T1_168")
+
+evaluation_stats(S2b, E_data, type="E", cohort = "T1_168")
+evaluation_stats(S2b, wp_data, type="WP", cohort = "T1_168")
