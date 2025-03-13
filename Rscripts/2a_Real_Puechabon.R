@@ -20,7 +20,7 @@ pue_aspect <- 0
 # Soil --------------------------------------------------------------------
 pue_soil <- puechabon_soil()
 sum(soil_waterFC(pue_soil, "VG"))
-sum(soil_waterExtractable(pue_soil, "VG", -6))
+sum(soil_waterExtractable(pue_soil, "VG", -1.5))
 
 
 # Meteo -------------------------------------------------------------------
@@ -324,11 +324,11 @@ p5 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+ylim(c(0,0.3))+theme(legend.posi
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/StomatalConductance_Puechabon_Real.png", p, width = 8, height = 11)
 
-p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
-p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sureau", subtitle = "Stem PLC")+ylab("Stem PLC (%)") + theme_classic()+theme(legend.position = "none")
+p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry non-segmented (measured)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = "none")
+p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry non-segmented (calibrated)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = "none")
+p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry segmented (measured)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = "none")
+p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry segmented (calibrated)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = "none")
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/Puechabon_Real/StemPLC_Puechabon_Real.png", p, width = 8, height = 11)
 

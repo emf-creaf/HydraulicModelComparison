@@ -14,6 +14,11 @@ fb_elevation <- 420
 fb_slope <- 0 
 fb_aspect <- 0
 
+# Soil --------------------------------------------------------------------
+fb_soil <- fontblanche_soil()
+sum(soil_waterFC(fb_soil, "VG"))
+sum(soil_waterExtractable(fb_soil, "VG", -1.5))
+
 # Meteo -------------------------------------------------------------------
 fb_meteo_raw <- read_delim("Data/FontBlanche/Climate_FontBlanche_GapFilled.csv",
                        delim = ";", escape_double = FALSE, trim_ws = TRUE)
@@ -462,21 +467,21 @@ p5 <- plot(S1sc, "GSWMax_SL", bySpecies = TRUE)+theme(legend.position = c(0.1,0.
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/StomatalConductance_FontBlanche_Real.png", p, width = 8, height = 11)
 
-p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sureau")
-p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented")
-p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented-cal")
-p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")
-p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented-cal")
+p1 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sureau")+theme_classic()
+p2 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented")+theme_classic()
+p3 <- plot(S1c, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-not-segmented-cal")+theme_classic()
+p4 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented")+theme_classic()
+p5 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = c(0.15,0.8))+labs(title="Sperry-segmented-cal")+theme_classic()
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
 ggsave2("Plots/FontBlanche_Real/StemPLC_FontBlanche_Real.png", p, width = 8, height = 11)
 
-p1 <- plot(S2b, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sureau")
-p2 <- plot(S1, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented")
-p3 <- plot(S1c, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-not-segmented-cal")
-p4 <- plot(S1s, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented")
-p5 <- plot(S1sc, "LeafPLC", bySpecies = TRUE)+ylim(c(0,100))+theme(legend.position = "none")+labs(title="Sperry-segmented-cal")
+p1 <- plot(S2b, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sureau", subtitle = "Stem PLC")+ylab("Stem PLC (%)") + theme_classic()+theme(legend.position = c(0.1,0.8))
+p2 <- plot(S1, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry non-segmented (measured)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = c(0.1,0.8))
+p3 <- plot(S1c, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry non-segmented (calibrated)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = c(0.1,0.8))
+p4 <- plot(S1s, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry segmented (measured)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = c(0.1,0.8))
+p5 <- plot(S1sc, "StemPLC", bySpecies = TRUE)+ylim(c(0,100))+labs(title="Sperry segmented (calibrated)", subtitle = "Stem PLC")+ylab("Stem PLC (%)")+theme_classic()+theme(legend.position = c(0.1,0.8))
 p <-plot_grid(p1, p2, p3, p4, p5, nrow = 5)
-ggsave2("Plots/FontBlanche_Real/LeafPLC_FontBlanche_Real.png", p, width = 8, height = 11)
+ggsave2("Plots/FontBlanche_Real/StemPLC_FontBlanche_Real.png", p, width = 8, height = 11)
 
 p1 <- plot(S2b, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sureau")
 p2 <- plot(S1, "SoilPlantConductance", bySpecies = TRUE)+ylim(c(0,1))+theme(legend.position = c(0.8,0.8))+labs(title="Sperry-not-segmented")
