@@ -34,7 +34,7 @@ control$leafCavitationEffects <- FALSE
 control$bareSoilEvaporation <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCavitationEffects <- FALSE
-control$sunlitShade <- FALSE
+# control$sunlitShade <- FALSE
 control$soilDomains <- "dual"
 control$segmentedXylemVulnerability <- FALSE
 
@@ -59,7 +59,7 @@ control$cavitationFlux <- FALSE
 control$sapFluidityVariation <- FALSE
 control$leafCuticularTranspiration <- TRUE
 control$stemCuticularTranspiration <- FALSE
-control$sunlitShade <- FALSE
+# control$sunlitShade <- FALSE
 control$gs_NightFrac <- 0.001
 control$stomatalSubmodel <- "Baldocchi"
 control$rhizosphereOverlap <- "none"
@@ -170,7 +170,7 @@ opt_function_ns(c(-4.8,46), cal_species = "Pinus sylvestris") # Test
 g_ns_ps <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 20,
+              popSize = 40,
               maxiter = 20,
               optim = FALSE,
               keepBest = TRUE,
@@ -186,7 +186,7 @@ opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
 g_ns_qi <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 20,
+              popSize = 40,
               maxiter = 20,
               optim = FALSE,
               keepBest = TRUE,
@@ -276,7 +276,7 @@ opt_function_s(c(-2.0,40), cal_species = "Pinus sylvestris") #Test
 g_s_ps <- ga(type = "real-valued",
            fitness = opt_function_s,
            lower = c(-5, 10), upper = c(-1,50),
-           popSize = 20,
+           popSize = 40,
            maxiter = 20,
            optim = FALSE,
            keepBest = TRUE,
@@ -292,7 +292,7 @@ opt_function_s(c(-2.0,40), cal_species = "Quercus ilex") #Test
 g_s_qi <- ga(type = "real-valued",
              fitness = opt_function_s,
              lower = c(-5, 10), upper = c(-1,50),
-             popSize = 20,
+             popSize = 40,
              maxiter = 20,
              optim = FALSE,
              keepBest = TRUE,
@@ -405,7 +405,7 @@ wp_evaluation_oak <- function(S, measured_data, title) {
     theme_classic()+theme(legend.position = c(0.9,0.8))
   p2<- evaluation_plot(S, measured_data, type="WP", cohort = "T2_394")+ ylim(c(-10,0))+ylab("")+
     labs(subtitle = "Leaf WP Quercus ilex", title = title)+theme_classic()+ theme(legend.position = c(0.1,0.35))
-  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
+  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))
 }
 p1 <-wp_evaluation_oak(S2b, measured_data, "Sureau")
 p2 <-wp_evaluation_oak(S1, measured_data, "Sperry non-segmented (measured)")
@@ -432,7 +432,7 @@ wp_evaluation_pine <- function(S, measured_data, title) {
     theme_classic()+theme(legend.position = c(0.9,0.8))
   p2<- evaluation_plot(S, measured_data, type="WP", cohort = "T1_361")+ylim(c(-6,0))+
     theme_classic()+theme(legend.position = c(0.07,0.35)) + labs(title = title, subtitle = "Leaf WP Pinus sylvestris")
-  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))  
+  return(cowplot::plot_grid(p1, p2, ncol = 2, rel_widths = c(1,1)))
 }
 p1 <-wp_evaluation_pine(S2b, measured_data, "Sureau")
 p2 <-wp_evaluation_pine(S1, measured_data, "Sperry non-segmented (measured)")
