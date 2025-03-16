@@ -9,7 +9,8 @@ source("Rscripts/0b_Ancillary_Prades.R")
 source("Rscripts/0_ExtractParams.R")
 
 # Terrain -----------------------------------------------------------------
-pr_latitude <- 41.33
+pr_latitude <- 41.33263
+pr_longitude <- 1.014429
 pr_elevation <- 1018
 pr_slope <- 35
 pr_aspect <- 8.5
@@ -20,9 +21,22 @@ sum(soil_waterFC(pr_soil, "VG"))
 sum(soil_waterExtractable(pr_soil, "VG", -1.5))
 
 # Meteo -------------------------------------------------------------------
-pr_meteo <- read.table("Data/Prades/PRADES_meteoData.txt", sep="\t", header = TRUE) |>
+int_2010 <- meteoland::read_interpolator("~/datasets/Climate/Products/InterpolationData/Catalunya/Historic/calibrated_2.0/interpolator_2010_calibrated.nc") 
+df <- data.frame(longitude = pr_longitude, latitude = pr_latitude, elevation = pr_elevation, slope = pr_slope, aspect = pr_aspect)
+pr_sf <- sf::st_as_sf(df, coords = c(1,2), crs = 4326)
+pr_2010 <- meteoland::interpolate_data(spatial_data = pr_sf, interpolator = int_2010)
+write.table(pr_2010$interpolated_data[[1]], "Data/Prades/PRADES_meteoInterp2010.txt", sep="\t")
+pr_meteo_2010 <-read.table("Data/Prades/PRADES_meteoInterp2010.txt", sep="\t", header = TRUE) |>
+  dplyr::select(dates, MaxTemperature, MinTemperature, MinRelativeHumidity, MaxRelativeHumidity, WindSpeed, Radiation, Precipitation) |>
+  dplyr::mutate(dates = as.Date(dates))|>
+  dplyr::filter(dates < as.Date("2010-04-28"))
+pr_meteo_site <- read.table("Data/Prades/PRADES_meteoData.txt", sep="\t", header = TRUE) |>
   dplyr::mutate(dates = as.Date(dates))|>
   as.data.frame()
+
+pr_meteo <- dplyr::bind_rows(pr_meteo_2010, 
+                             pr_meteo_site)
+row.names(pr_meteo) <- NULL
 
 # Sperry initialization and run ----------------------------------------------------------
 #Initialize control parameters
@@ -170,7 +184,7 @@ opt_function_ns(c(-4.8,46), cal_species = "Pinus sylvestris") # Test
 g_ns_ps <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 40,
+              popSize = 30,
               maxiter = 20,
               optim = FALSE,
               keepBest = TRUE,
@@ -178,15 +192,15 @@ g_ns_ps <- ga(type = "real-valued",
 saveRDS(g_ns_ps, "Rdata/Prades/g_ns_ps.rds")
 
 g_ns_ps <- readRDS("Rdata/Prades/g_ns_ps.rds")
-# opt = c(-2.741812, 40.55099)
-# MAE = 40.25751
+# opt = c(-1.540698, 46.121)
+# MAE = 39.42426
 
 # Quercus ilex
 opt_function_ns(c(-4.8,46), cal_species = "Quercus ilex") # Test
 g_ns_qi <- ga(type = "real-valued",
               fitness = opt_function_ns,
               lower = c(-5, 10), upper = c(-1,50),
-              popSize = 40,
+              popSize = 30,
               maxiter = 20,
               optim = FALSE,
               keepBest = TRUE,
@@ -194,8 +208,8 @@ g_ns_qi <- ga(type = "real-valued",
 saveRDS(g_ns_qi, "Rdata/Prades/g_ns_qi.rds")
 
 g_ns_qi <- readRDS("Rdata/Prades/g_ns_qi.rds")
-# opt = c(-2.168199, 18.06897)
-# MAE = 30.69368
+# opt = c(-1.942426, 25.3734)
+# MAE = 50.48056
 
 # Simulation with calibrated values
 P50 <- c(g_ns_ps@solution[1], g_ns_qi@solution[1])
@@ -276,7 +290,7 @@ opt_function_s(c(-2.0,40), cal_species = "Pinus sylvestris") #Test
 g_s_ps <- ga(type = "real-valued",
            fitness = opt_function_s,
            lower = c(-5, 10), upper = c(-1,50),
-           popSize = 40,
+           popSize = 30,
            maxiter = 20,
            optim = FALSE,
            keepBest = TRUE,
@@ -284,15 +298,15 @@ g_s_ps <- ga(type = "real-valued",
 saveRDS(g_s_ps, "Rdata/Prades/g_s_ps.rds")
 
 g_s_ps <- readRDS("Rdata/Prades/g_s_ps.rds")
-# opt <- c(-2.559114,  41.60563)
-# MAE <- 40.42071
+# opt <- c(-1.401191,  42.70158)
+# MAE <- 40.99933
 
 # Quercus ilex
 opt_function_s(c(-2.0,40), cal_species = "Quercus ilex") #Test
 g_s_qi <- ga(type = "real-valued",
              fitness = opt_function_s,
              lower = c(-5, 10), upper = c(-1,50),
-             popSize = 40,
+             popSize = 30,
              maxiter = 20,
              optim = FALSE,
              keepBest = TRUE,
@@ -300,8 +314,8 @@ g_s_qi <- ga(type = "real-valued",
 saveRDS(g_s_qi, "Rdata/Prades/g_s_qi.rds")
 
 g_s_qi <- readRDS("Rdata/Prades/g_s_qi.rds")
-# opt <- c(-2.015863 ,  23.38618)
-# MAE <- 31.52489
+# opt <- c(-2.343352 ,  36.32665)
+# MAE <- 52.09653
 
 # Simulation with calibrated values
 P50 <- c(g_s_ps@solution[1], g_s_qi@solution[1])

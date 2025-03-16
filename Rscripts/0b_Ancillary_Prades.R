@@ -3,7 +3,7 @@ prades_soil <- function(){
   pr_soil_df <- read.table("Data/Prades/PRADES_soilData.txt", sep="\t", header = TRUE)
   # pr_soil_df$widths[4]<- 3000
   pr_soil <- soil(pr_soil_df)
-  pr_soil$rfc <- c(45, 70, 80, 90)
+  pr_soil$rfc <- c(45, 70, 80, 95)
   return(pr_soil)
 }
 
